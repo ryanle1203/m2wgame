@@ -59,6 +59,20 @@ use demo data with invented games, and the interface is currently Vietnamese.*
 - Xcode Command Line Tools (`xcode-select --install`) and [Rust](https://rustup.rs) to build.
 - At least one Wine engine (see below). M2WGame does not ship one.
 
+## Install
+
+1. Download `M2WGame-<version>-arm64.dmg` from the [Releases page](https://github.com/ryanle1203/m2wgame/releases) (Apple Silicon Macs, macOS 14+).
+   Optional: check it with the `.sha256` file next to it (`shasum -a 256 -c M2WGame-<version>-arm64.dmg.sha256`).
+2. Open the `.dmg` and drag **M2WGame** onto **Applications**.
+3. **First launch:** the app is not notarized by Apple (that needs a paid developer account), so
+   macOS may say it "cannot be opened because the developer cannot be verified". Open it anyway:
+   right-click (or Control-click) the app, choose **Open**, then **Open** again. Or go to
+   *System Settings → Privacy & Security* and click **Open Anyway**. Or run
+   `xattr -dr com.apple.quarantine /Applications/M2WGame.app` in Terminal.
+4. Add a Wine engine (see [Get an engine](#get-an-engine)); M2WGame does not include one.
+
+Prefer to build it yourself? See below.
+
 ## Build and run
 
 ```bash

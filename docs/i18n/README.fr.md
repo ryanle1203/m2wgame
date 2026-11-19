@@ -21,6 +21,10 @@ M2WGame **n'est pas affilié** à Apple, Valve, CodeWeavers ni au projet Wine. I
 
 Mac Apple Silicon, macOS 14 ou plus récent, Rosetta 2, Xcode Command Line Tools et [Rust](https://rustup.rs). Vous devez fournir votre propre moteur Wine (non inclus) ; voir « Get an engine » dans le README anglais.
 
+## Téléchargement
+
+Téléchargez le `.dmg` depuis [Releases](https://github.com/ryanle1203/m2wgame/releases) et glissez-le dans Applications. L'app n'est pas notarisée par Apple : la première fois, clic droit > Ouvrir (détails dans la section « Install » du README anglais).
+
 ## Compilation
 
 ```bash

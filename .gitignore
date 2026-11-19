@@ -9,5 +9,7 @@ target.nosync/
 .DS_Store
 .idea/
 .vscode/
+# release packages
+dist/
 # logs
 *.log

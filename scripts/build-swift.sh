@@ -34,7 +34,8 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$OBJ/M2WGame" "$APP/Contents/MacOS/M2WGame"
 [ -f swift/AppIcon.icns ] && cp swift/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
 
-cat > "$APP/Contents/Info.plist" <<'PLIST'
+VERSION="$(grep -m1 '^version' Cargo.toml | cut -d'"' -f2)"
+cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -44,11 +45,12 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
   <key>CFBundleIdentifier</key><string>io.github.ryanle1203.m2wgame</string>
   <key>CFBundleExecutable</key><string>M2WGame</string>
   <key>CFBundleIconFile</key><string>AppIcon</string>
-  <key>CFBundleVersion</key><string>0.2.0</string>
-  <key>CFBundleShortVersionString</key><string>0.2.0</string>
+  <key>CFBundleVersion</key><string>$VERSION</string>
+  <key>CFBundleShortVersionString</key><string>$VERSION</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>LSMinimumSystemVersion</key><string>14.0</string>
   <key>NSHighResolutionCapable</key><true/>
+  <key>NSHumanReadableCopyright</key><string>MIT License. M2WGame contributors.</string>
   <key>LSApplicationCategoryType</key><string>public.app-category.games</string>
 </dict>
 </plist>

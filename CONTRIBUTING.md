@@ -62,6 +62,12 @@ Run the app against throwaway data so no personal games or paths show up:
   `cargo test --lib -- --ignored --nocapture`.
 - For UI changes please describe (or attach a screenshot of) what you checked by hand.
 
+## Making a release
+
+`./scripts/make-dmg.sh` builds the app and writes `dist/M2WGame-<version>-arm64.dmg` plus a
+`.sha256` file (the version comes from `Cargo.toml`). Tag the commit `vX.Y.Z` and attach both
+files to a GitHub Release; do not commit the `.dmg` to git. The app is ad-hoc signed only.
+
 ## Pull requests
 
 - Keep them small and focused; explain *why*.

@@ -27,6 +27,13 @@ không tải lậu và không vượt qua bảo vệ bản quyền nào: bạn c
   để lấy lại dung lượng.
 - **Kiểm tra hệ thống và mạng**: Rosetta, phiên bản macOS, RAM, dung lượng trống, kết nối tới máy chủ Steam.
 
+## Tải về và cài đặt
+
+1. Tải file `M2WGame-<phiên bản>-arm64.dmg` ở trang [Releases](https://github.com/ryanle1203/m2wgame/releases) (Mac chip Apple, macOS 14 trở lên).
+2. Mở file `.dmg`, kéo **M2WGame** vào thư mục **Applications**.
+3. **Lần mở đầu tiên:** app chưa được Apple công chứng (cần tài khoản nhà phát triển trả phí), nên macOS có thể báo "không thể mở vì không xác minh được nhà phát triển". Cách mở: bấm chuột phải vào app, chọn **Mở (Open)**, rồi **Mở** lần nữa. Hoặc vào *Cài đặt hệ thống → Quyền riêng tư & Bảo mật* và bấm **Vẫn mở (Open Anyway)**.
+4. Tự chuẩn bị một bản Wine (xem phần dưới); M2WGame không kèm theo.
+
 ## Cài đặt từ mã nguồn
 
 Cần: Mac chip Apple, macOS 14 trở lên, Rosetta 2, Xcode Command Line Tools (`xcode-select --install`) và [Rust](https://rustup.rs).
