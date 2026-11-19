@@ -64,9 +64,18 @@ Run the app against throwaway data so no personal games or paths show up:
 
 ## Making a release
 
-`./scripts/make-dmg.sh` builds the app and writes `dist/M2WGame-<version>-arm64.dmg` plus a
-`.sha256` file (the version comes from `Cargo.toml`). Tag the commit `vX.Y.Z` and attach both
-files to a GitHub Release; do not commit the `.dmg` to git. The app is ad-hoc signed only.
+Releases are built by GitHub Actions (`.github/workflows/release.yml`), not on a maintainer's Mac:
+
+1. Bump `version` in `Cargo.toml` (and run `cargo build` so `Cargo.lock` follows), commit, push.
+2. Tag and push the tag: `git tag v0.1.1 && git push origin v0.1.1`.
+3. The workflow checks that the tag matches `Cargo.toml`, builds `M2WGame-<version>-arm64.dmg` with
+   `scripts/make-dmg.sh`, and publishes a GitHub Release with the `.dmg`, its `.sha256` and notes
+   from `.github/release-notes.md` (versions `0.x` are marked as pre-releases).
+
+To only test the build, run the workflow by hand (Actions tab, Release, *Run workflow*): it uploads
+the disk image as a workflow artifact and publishes nothing. You can also run
+`./scripts/make-dmg.sh` locally (output in `dist/`). Never commit the `.dmg` to git.
+The app is ad-hoc signed only (not notarized).
 
 ## Pull requests
 
