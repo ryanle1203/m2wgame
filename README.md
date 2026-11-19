@@ -17,6 +17,20 @@ and it explains problems in plain language instead of leaving you with a wall of
 M2WGame is **not affiliated with** Apple, Valve, CodeWeavers or the Wine project. It does not
 include, download or bypass any game, DRM or licence check: you need to own your games.
 
+## Screenshots
+
+<p>
+  <img src="docs/images/library.png" width="49%" alt="Game library with a 32-bit game flagged">
+  <img src="docs/images/environments.png" width="49%" alt="Environments (Wine bottles)">
+</p>
+<p>
+  <img src="docs/images/engines.png" width="49%" alt="Wine engines">
+  <img src="docs/images/system.png" width="49%" alt="System check">
+</p>
+
+*Library (a 32-bit game gets a warning), environments, engines, system check. The screenshots
+use demo data with invented games, and the interface is currently Vietnamese.*
+
 ## What it does
 
 - **Library** of games with Play / Stop, per-game settings, game logs and plain-language hints

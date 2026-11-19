@@ -43,6 +43,17 @@ final class Store {
     var showAddGame = false
     var section: Section = .library
 
+    /// Developer hooks, used to take documentation screenshots without clicking:
+    /// `M2WGAME_START_SECTION` = library | environments | engines | system,
+    /// `M2WGAME_OPEN` = add_game | settings | check_net.
+    let startAction: String? = ProcessInfo.processInfo.environment["M2WGAME_OPEN"]
+
+    init() {
+        let env = ProcessInfo.processInfo.environment
+        if let s = env["M2WGAME_START_SECTION"], let sec = Section(rawValue: s) { section = sec }
+        if env["M2WGAME_OPEN"] == "add_game" { showAddGame = true }
+    }
+
     private var lastNoticeId = 0
     private var localNoticeId = 0
     private var started = false
@@ -75,6 +86,7 @@ final class Store {
     func start() {
         guard !started else { return }
         started = true
+        if startAction == "check_net" { Task { _ = await send(["cmd": "check_net"]) } }
         Task {
             while true {
                 await refresh()

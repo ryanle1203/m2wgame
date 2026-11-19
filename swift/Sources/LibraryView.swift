@@ -37,6 +37,12 @@ struct LibraryView: View {
             }
         }
         .navigationTitle("Thư viện")
+        .task {
+            // Developer hook (see Store): open the first game's settings right away.
+            guard store.startAction == "settings" else { return }
+            for _ in 0..<30 where games.isEmpty { try? await Task.sleep(for: .milliseconds(200)) }
+            editing = games.first
+        }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
