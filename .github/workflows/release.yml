@@ -1,0 +1,61 @@
+name: Release
+
+# Pushing a tag like v0.1.1 builds the disk image and publishes a GitHub Release.
+# Run it by hand (Actions tab > Release > Run workflow) to only test the build: nothing is published.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  dmg:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rust toolchain
+        run: rustup toolchain install stable --profile minimal
+
+      - name: Tag must match the version in Cargo.toml
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          V="$(grep -m1 '^version' Cargo.toml | cut -d'"' -f2)"
+          if [ "v$V" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match Cargo.toml version v$V. Bump the version, commit, then tag again."
+            exit 1
+          fi
+
+      - name: Build the disk image
+        run: ./scripts/make-dmg.sh
+
+      - name: Check the disk image
+        run: |
+          ls -la dist
+          test "$(stat -f%z dist/*.dmg)" -gt 1000000
+          hdiutil imageinfo dist/*.dmg | head -5
+          ( cd dist && shasum -a 256 -c ./*.sha256 )
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: M2WGame-dmg
+          path: dist/*
+          if-no-files-found: error
+
+      - name: Publish the release (tags only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          V="${GITHUB_REF_NAME#v}"
+          SHA="$(cut -d' ' -f1 dist/*.sha256)"
+          sed -e "s/@VERSION@/$V/g" -e "s/@SHA256@/$SHA/g" .github/release-notes.md > notes.md
+          PRE=""
+          case "$V" in 0.*|*-*) PRE="--prerelease" ;; esac
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" dist/* --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" dist/* --title "M2WGame $V" --notes-file notes.md $PRE
+          fi
