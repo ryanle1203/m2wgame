@@ -85,16 +85,22 @@ struct Sidebar: View {
         .navigationSplitViewColumnWidth(min: 180, ideal: 210, max: 280)
         .safeAreaInset(edge: .bottom) {
             VStack(alignment: .leading, spacing: 6) {
-                HStack(spacing: 6) {
-                    Image(systemName: "globe").foregroundStyle(.secondary)
+                Menu {
                     Picker("Ngôn ngữ", selection: $store.languageChoice) {
                         ForEach(LanguageChoice.allCases) { Text($0.title).tag($0) }
                     }
+                    .pickerStyle(.inline)
                     .labelsHidden()
-                    .pickerStyle(.menu)
-                    .controlSize(.small)
-                    .fixedSize()
+                } label: {
+                    Label {
+                        Text(store.languageChoice.title).foregroundStyle(.secondary)
+                    } icon: {
+                        Image(systemName: "globe").foregroundStyle(.secondary)
+                    }
                 }
+                .menuStyle(.borderlessButton)
+                .fixedSize()
+                .help("Ngôn ngữ")
                 if let d = store.snap?.download, !d.finished {
                     HStack(spacing: 6) {
                         ProgressView().controlSize(.small)
