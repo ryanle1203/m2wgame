@@ -19,6 +19,12 @@ fn run(request: &str) -> String {
         // Refuse before touching the core (and the user's data on disk).
         return r#"{"ok":false,"error":"yêu cầu không hợp lệ"}"#.to_string();
     }
+    // The window tells the language first, before the core exists: the core's first texts
+    // (for example the name of the first environment) are then already in that language.
+    if req.get("cmd").and_then(Value::as_str) == Some("set_language") {
+        crate::i18n::set_lang(req.get("lang").and_then(Value::as_str).unwrap_or(""));
+        return serde_json::json!({"ok": true, "language": crate::i18n::code()}).to_string();
+    }
     // Looking at / clicking in Steam's window talks to Steam only; it must not wait for the core.
     if let Some(answer) = crate::service::handle_steam_ui(&req) {
         return answer.to_string();

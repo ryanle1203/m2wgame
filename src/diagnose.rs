@@ -44,12 +44,12 @@ pub fn diagnose(log: &str, failed: bool, is_steam: bool) -> Vec<Hint> {
     if has("Failed to determine download location") {
         out.push(hint(
             Level::Warn,
-            "Steam bị gián đoạn khi tải gói cập nhật. Bấm Dừng rồi Chơi lại, Steam sẽ làm tiếp phần còn thiếu.",
+            t!("Steam bị gián đoạn khi tải gói cập nhật. Bấm Dừng rồi Chơi lại, Steam sẽ làm tiếp phần còn thiếu."),
         ));
     } else if has("needs to be online") || has("http error 0") {
         out.push(hint(
             Level::Bad,
-            "Steam không tải được bản cập nhật. Thường do mạng chặn máy chủ của Steam: vào Kiểm tra máy, bấm Kiểm tra mạng. Nếu bị chặn, bật VPN rồi chạy lại Steam.",
+            t!("Steam không tải được bản cập nhật. Thường do mạng chặn máy chủ của Steam: vào Kiểm tra máy, bấm Kiểm tra mạng. Nếu bị chặn, bật VPN rồi chạy lại Steam."),
         ));
     }
 
@@ -58,12 +58,12 @@ pub fn diagnose(log: &str, failed: bool, is_steam: bool) -> Vec<Hint> {
         if is_steam {
             out.push(hint(
                 Level::Bad,
-                "Steam bị lỗi bộ nhớ khi chạy trên động cơ này, thường vì động cơ Wine quá cũ (xem phiên bản ở mục Động cơ). Hãy thử một động cơ Wine mới hơn cho môi trường này.",
+                t!("Steam bị lỗi bộ nhớ khi chạy trên động cơ này, thường vì động cơ Wine quá cũ (xem phiên bản ở mục Động cơ). Hãy thử một động cơ Wine mới hơn cho môi trường này."),
             ));
         } else {
             out.push(hint(
                 Level::Bad,
-                "Chương trình bị lỗi bộ nhớ (crash). Thử bật \"Ghi chi tiết lỗi vào log\" trong Cài đặt của game rồi chạy lại, hoặc thử động cơ khác.",
+                t!("Chương trình bị lỗi bộ nhớ (crash). Thử bật \"Ghi nhật ký chi tiết\" (mục Nâng cao trong Cài đặt của game) rồi chạy lại, hoặc thử động cơ khác."),
             ));
         }
     }
@@ -72,37 +72,37 @@ pub fn diagnose(log: &str, failed: bool, is_steam: bool) -> Vec<Hint> {
     if let Some(dll) = missing_library(log) {
         out.push(hint(
             Level::Bad,
-            format!("Thiếu thư viện Windows {dll}. Game thường kèm bộ cài bổ sung (tìm thư mục vcredist hoặc _CommonRedist), hãy chạy nó trong cùng môi trường."),
+            t!("Thiếu thư viện Windows {}. Game thường kèm bộ cài bổ sung (tìm thư mục vcredist hoặc _CommonRedist), hãy chạy nó trong cùng môi trường.", dll),
         ));
     }
     if has("bad CPU type") {
         out.push(hint(
             Level::Bad,
-            "Máy chưa cài Rosetta 2. Vào Kiểm tra máy để xem cách cài.",
+            t!("Máy chưa cài Rosetta 2. Vào Kiểm tra máy để xem cách cài."),
         ));
     }
     if has("could not load kernel32.dll") || has("failed to load ntdll") || has("wine: failed to initialize") {
         out.push(hint(
             Level::Bad,
-            "Môi trường game bị hỏng. Hãy tạo một môi trường mới ở mục Môi trường và thử lại.",
+            t!("Môi trường game bị hỏng. Hãy tạo một môi trường mới ở mục Môi trường và thử lại."),
         ));
     }
     if has("no driver could be loaded") {
         out.push(hint(
             Level::Bad,
-            "Wine không mở được cửa sổ trên macOS. Thử một động cơ khác.",
+            t!("Wine không mở được cửa sổ trên macOS. Thử một động cơ khác."),
         ));
     }
     if has("out of memory") {
         out.push(hint(
             Level::Warn,
-            "Máy hết bộ nhớ. Đóng bớt ứng dụng khác rồi thử lại.",
+            t!("Máy hết bộ nhớ. Đóng bớt ứng dụng khác rồi thử lại."),
         ));
     }
     if has("err:d3d") {
         out.push(hint(
             Level::Warn,
-            "Game báo lỗi đồ họa DirectX. Kiểm tra động cơ đang dùng có D3DMetal (mục Động cơ).",
+            t!("Game báo lỗi đồ họa DirectX. Kiểm tra động cơ đang dùng có D3DMetal (mục Động cơ)."),
         ));
     }
 
@@ -110,7 +110,7 @@ pub fn diagnose(log: &str, failed: bool, is_steam: bool) -> Vec<Hint> {
     if out.is_empty() && failed {
         out.push(hint(
             Level::Warn,
-            "Chưa nhận ra lỗi cụ thể. Bật \"Ghi chi tiết lỗi vào log\" trong Cài đặt của game, chạy lại, rồi mở Log để có thêm thông tin.",
+            t!("Chưa nhận ra lỗi cụ thể. Bật \"Ghi nhật ký chi tiết\" (mục Nâng cao trong Cài đặt của game), chạy lại, rồi mở Log để có thêm thông tin."),
         ));
     }
     out
@@ -181,10 +181,22 @@ mod tests {
     }
 
     #[test]
+    fn hints_speak_english_when_asked() {
+        let en = crate::i18n::with_lang(crate::i18n::Lang::En, || {
+            diagnose("zsh: bad CPU type in executable: wine64", true, false)
+        });
+        assert!(en[0].text.contains("Rosetta 2 is not installed"), "{}", en[0].text);
+        let en = crate::i18n::with_lang(crate::i18n::Lang::En, || diagnose("nothing useful here", true, false));
+        assert!(en[0].text.contains("Write detailed log"), "{}", en[0].text);
+        // and the same call without the override is still Vietnamese
+        assert!(diagnose("nothing useful here", true, false)[0].text.contains("Ghi nhật ký chi tiết"));
+    }
+
+    #[test]
     fn unknown_failure_asks_for_detailed_logging() {
         let hints = diagnose("nothing useful here", true, false);
         assert_eq!(hints.len(), 1);
-        assert!(hints[0].text.contains("Ghi chi tiết lỗi"));
+        assert!(hints[0].text.contains("Ghi nhật ký chi tiết"));
     }
 
     #[test]

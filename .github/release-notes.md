@@ -12,7 +12,7 @@ You also need a Wine engine; M2WGame does not include one. See [Get an engine](h
 ### Known limitations
 - Early software, tested on few Macs
 - 32-bit Windows games usually crash at start-up on free Wine builds on Apple Silicon
-- The app's interface is currently Vietnamese only (docs are in 9 languages)
+- The app's interface is in English and Vietnamese (docs are in 9 languages)
 - DirectX 12 and anti-cheat games are mostly out of reach
 
 ### Checksum (SHA-256)

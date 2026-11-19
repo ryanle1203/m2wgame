@@ -56,23 +56,23 @@ impl Job {
             name,
             phase: Phase::Starting,
             percent: 0.0,
-            message: "Đang khởi động SteamCMD…".into(),
+            message: t!("Đang khởi động SteamCMD…").into(),
             tail: Vec::new(),
             installed_ok: false,
         }
     }
 
-    fn fail(&mut self, why: &str) {
+    fn fail(&mut self, why: impl AsRef<str>) {
         if self.phase != Phase::Failed {
             self.phase = Phase::Failed;
-            self.message = why.into();
+            self.message = why.as_ref().into();
         }
     }
 
-    fn set(&mut self, phase: Phase, message: &str) {
+    fn set(&mut self, phase: Phase, message: impl AsRef<str>) {
         if !self.phase.finished() {
             self.phase = phase;
-            self.message = message.into();
+            self.message = message.as_ref().into();
         }
     }
 }
@@ -107,31 +107,31 @@ pub fn interpret_line(line: &str, job: &mut Job) {
     let low = l.to_lowercase();
 
     if low.contains("invalid password") {
-        job.fail("Sai mật khẩu hoặc tên tài khoản.");
+        job.fail(t!("Sai mật khẩu hoặc tên tài khoản."));
     } else if low.contains("rate limit exceeded") {
-        job.fail("Steam tạm chặn vì đăng nhập quá nhiều lần. Đợi ít nhất 30 phút rồi thử lại.");
+        job.fail(t!("Steam tạm chặn vì đăng nhập quá nhiều lần. Đợi ít nhất 30 phút rồi thử lại."));
     } else if low.contains("two-factor code mismatch") || low.contains("invalid login auth code") {
-        job.fail("Mã Steam Guard sai hoặc đã hết hạn. Hãy thử lại.");
+        job.fail(t!("Mã Steam Guard sai hoặc đã hết hạn. Hãy thử lại."));
     } else if low.contains("account logon denied") {
-        job.fail("Steam từ chối đăng nhập. Hãy thử lại và duyệt yêu cầu trên điện thoại.");
+        job.fail(t!("Steam từ chối đăng nhập. Hãy thử lại và duyệt yêu cầu trên điện thoại."));
     } else if low.contains("no subscription") {
-        job.fail("Tài khoản này chưa sở hữu game này, hoặc game không có bản Windows để tải.");
+        job.fail(t!("Tài khoản này chưa sở hữu game này, hoặc game không có bản Windows để tải."));
     } else if low.contains("failed to install app") || low.starts_with("error!") {
-        job.fail(&format!("SteamCMD báo lỗi: {l}"));
+        job.fail(&t!("SteamCMD báo lỗi: {}", l));
     } else if low.contains("failed (") && low.contains("login") {
-        job.fail(&format!("Đăng nhập thất bại: {l}"));
+        job.fail(&t!("Đăng nhập thất bại: {}", l));
     } else if low.contains("logging in user") {
-        job.set(Phase::Login, "Đang đăng nhập Steam…");
+        job.set(Phase::Login, t!("Đang đăng nhập Steam…"));
     } else if low.contains("logged in ok") || low.contains("waiting for client config...ok") {
-        job.set(Phase::Downloading, "Đã đăng nhập, bắt đầu tải…");
+        job.set(Phase::Downloading, t!("Đã đăng nhập, bắt đầu tải…"));
     } else if low.contains("update state") {
         if let Some(p) = parse_progress(&low) {
             job.percent = p;
             job.phase = if job.phase.finished() { job.phase } else { Phase::Downloading };
             job.message = if low.contains("validating") {
-                format!("Đang kiểm tra file… {p:.0}%")
+                t!("Đang kiểm tra file… {}%", format!("{:.0}", p))
             } else {
-                format!("Đang tải… {p:.1}%")
+                t!("Đang tải… {}%", format!("{:.1}", p))
             };
         }
     } else if low.contains("success!") && low.contains("fully installed") {
@@ -144,14 +144,14 @@ pub fn interpret_line(line: &str, job: &mut Job) {
 pub fn interpret_prompt(text: &str, job: &mut Job) {
     let low = text.to_lowercase();
     if low.contains("password:") {
-        job.set(Phase::NeedPassword, "Steam cần mật khẩu của tài khoản.");
+        job.set(Phase::NeedPassword, t!("Steam cần mật khẩu của tài khoản."));
     } else if low.contains("steam guard code") || low.contains("two-factor code") {
         job.set(
             Phase::NeedCode,
-            "Nhập mã Steam Guard, hoặc duyệt đăng nhập trên điện thoại.",
+            t!("Nhập mã Steam Guard, hoặc duyệt đăng nhập trên điện thoại."),
         );
     } else if low.contains("confirm the login in the steam mobile app") || low.contains("confirm this sign-in") {
-        job.set(Phase::WaitingMobile, "Mở ứng dụng Steam trên điện thoại và duyệt đăng nhập (chọn \"Steam Client\").");
+        job.set(Phase::WaitingMobile, t!("Mở ứng dụng Steam trên điện thoại và duyệt đăng nhập (chọn \"Steam Client\")."));
     }
 }
 
@@ -189,7 +189,7 @@ impl Download {
         steamapps: PathBuf,
     ) -> Result<Download, String> {
         use std::os::unix::process::CommandExt;
-        std::fs::create_dir_all(&tmp).map_err(|e| format!("Không tạo được thư mục tải: {e}"))?;
+        std::fs::create_dir_all(&tmp).map_err(|e| t!("Không tạo được thư mục tải: {}", e))?;
         let appid = job.appid.clone();
         let mut child = Command::new("/usr/bin/script")
             .args(["-q", "/dev/null"])
@@ -203,9 +203,9 @@ impl Download {
             // Own process group so Cancel can end SteamCMD together with `script`.
             .process_group(0)
             .spawn()
-            .map_err(|e| format!("Không chạy được SteamCMD: {e}"))?;
+            .map_err(|e| t!("Không chạy được SteamCMD: {}", e))?;
         let pid = child.id();
-        let mut out = child.stdout.take().ok_or("Không đọc được đầu ra của SteamCMD")?;
+        let mut out = child.stdout.take().ok_or(t!("Không đọc được đầu ra của SteamCMD"))?;
         let stdin = Arc::new(Mutex::new(child.stdin.take()));
         let job = Arc::new(Mutex::new(job));
         let secrets = Arc::new(Mutex::new(Vec::<String>::new()));
@@ -256,25 +256,22 @@ impl Download {
                 return;
             }
             if installed_ok {
-                job_t.lock().unwrap().set(Phase::Filing, "Đang xếp game vào thư viện Steam…");
+                job_t.lock().unwrap().set(Phase::Filing, t!("Đang xếp game vào thư viện Steam…"));
                 match steam::file_into_library(&tmp, &steamapps, &appid) {
                     Ok((name, dir)) => {
                         let mut j = job_t.lock().unwrap();
                         j.name = Some(name.clone());
                         j.phase = Phase::Done;
-                        j.message = format!("Đã tải xong {name}. Bấm Thêm để đưa vào thư viện.");
+                        j.message = t!("Đã tải xong {}. Bấm Thêm để đưa vào thư viện.", name);
                         if steam::game_bits(&dir) == Some(32) {
-                            j.message.push_str(&format!(" Lưu ý: {}.", steam::BITS32_WARNING));
+                            j.message.push_str(&t!(" Lưu ý: {}.", steam::bits32_warning()));
                         }
                     }
                     Err(e) => job_t.lock().unwrap().fail(&e),
                 }
             } else {
                 let code = status.ok().and_then(|s| s.code());
-                job_t.lock().unwrap().fail(&format!(
-                    "SteamCMD dừng trước khi tải xong{}. Có thể đăng nhập lại và tải tiếp: file đã tải được giữ lại.",
-                    code.map(|c| format!(" (mã {c})")).unwrap_or_default()
-                ));
+                job_t.lock().unwrap().fail(&t!("SteamCMD dừng trước khi tải xong{}. Có thể đăng nhập lại và tải tiếp: file đã tải được giữ lại.", code.map(|c| t!(" (mã {})", c)).unwrap_or_default()));
             }
         });
 
@@ -288,13 +285,13 @@ impl Download {
                 s.push(text.to_string());
             }
         }
-        let mut guard = self.stdin.lock().map_err(|_| "lỗi nội bộ".to_string())?;
-        let stdin = guard.as_mut().ok_or("SteamCMD đã đóng, không nhận thêm được.")?;
+        let mut guard = self.stdin.lock().map_err(|_| t!("lỗi nội bộ").to_string())?;
+        let stdin = guard.as_mut().ok_or(t!("SteamCMD đã đóng, không nhận thêm được."))?;
         stdin
             .write_all(format!("{text}\n").as_bytes())
             .and_then(|_| stdin.flush())
-            .map_err(|e| format!("Không gửi được cho SteamCMD: {e}"))?;
-        self.job.lock().unwrap().set(Phase::Login, "Đang đăng nhập Steam…");
+            .map_err(|e| t!("Không gửi được cho SteamCMD: {}", e))?;
+        self.job.lock().unwrap().set(Phase::Login, t!("Đang đăng nhập Steam…"));
         Ok(())
     }
 
@@ -304,7 +301,7 @@ impl Download {
             .stdout(Stdio::null())
             .stderr(Stdio::null())
             .status();
-        self.job.lock().unwrap().fail("Đã hủy.");
+        self.job.lock().unwrap().fail(t!("Đã hủy."));
     }
 
     pub fn snapshot(&self) -> Job {

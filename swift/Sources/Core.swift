@@ -48,8 +48,26 @@ final class Store {
     /// `M2WGAME_OPEN` = add_game | settings | check_net.
     let startAction: String? = ProcessInfo.processInfo.environment["M2WGAME_OPEN"]
 
+    /// The interface language the user chose (saved), and the one actually in use ("en" / "vi").
+    var languageChoice: LanguageChoice = LanguageChoice.loaded() {
+        didSet {
+            languageChoice.save()
+            applyLanguage()
+        }
+    }
+    var languageCode = "vi"
+
+    private func applyLanguage() {
+        languageCode = languageChoice.code
+        activeLanguage = languageCode
+        let code = languageCode
+        Task { _ = await Bridge.call(["cmd": "set_language", "lang": code]) }
+    }
+
     init() {
         let env = ProcessInfo.processInfo.environment
+        languageCode = languageChoice.code
+        activeLanguage = languageCode
         if let s = env["M2WGAME_START_SECTION"], let sec = Section(rawValue: s) { section = sec }
         if env["M2WGAME_OPEN"] == "add_game" { showAddGame = true }
     }
@@ -64,10 +82,10 @@ final class Store {
 
         var title: String {
             switch self {
-            case .library: "Thư viện"
-            case .environments: "Môi trường"
-            case .engines: "Động cơ"
-            case .system: "Hệ thống"
+            case .library: L("Thư viện")
+            case .environments: L("Môi trường")
+            case .engines: L("Động cơ")
+            case .system: L("Hệ thống")
             }
         }
 
@@ -86,8 +104,11 @@ final class Store {
     func start() {
         guard !started else { return }
         started = true
+        // Tell the core the language before anything else, so its texts come out right.
+        let code = languageCode
         if startAction == "check_net" { Task { _ = await send(["cmd": "check_net"]) } }
         Task {
+            _ = await Bridge.call(["cmd": "set_language", "lang": code])
             while true {
                 await refresh()
                 try? await Task.sleep(for: .milliseconds(snap?.runningCount ?? 0 > 0 ? 1000 : 1500))
@@ -112,14 +133,14 @@ final class Store {
     func send(_ command: [String: Any]) async -> Bool {
         guard let data = await Bridge.call(command),
               let reply = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            showLocal("Không nói chuyện được với lõi của ứng dụng.", error: true)
+            showLocal(L("Không nói chuyện được với lõi của ứng dụng."), error: true)
             return false
         }
         let ok = reply["ok"] as? Bool ?? false
         await refresh()
         if !ok {
             // The core usually posts the same message itself; only add ours if it did not.
-            let text = reply["error"] as? String ?? "Có lỗi xảy ra."
+            let text = reply["error"] as? String ?? L("Có lỗi xảy ra.")
             if toast?.text != text { showLocal(text, error: true) }
         }
         return ok
@@ -178,11 +199,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if running.isEmpty { return .terminateNow }
 
         let alert = NSAlert()
-        alert.messageText = "Đang có game đang chạy"
-        alert.informativeText = "\(running.map(\.name).joined(separator: ", ")). Nếu thoát mà không dừng, game vẫn chạy nhưng M2WGame sẽ không còn điều khiển được nó."
-        alert.addButton(withTitle: "Dừng game rồi thoát")
-        alert.addButton(withTitle: "Thoát, để game chạy tiếp")
-        alert.addButton(withTitle: "Hủy")
+        alert.messageText = L("Đang có game đang chạy")
+        alert.informativeText = L("%@. Nếu thoát mà không dừng, game vẫn chạy nhưng M2WGame sẽ không còn điều khiển được nó.", running.map(\.name).joined(separator: ", "))
+        alert.addButton(withTitle: L("Dừng game rồi thoát"))
+        alert.addButton(withTitle: L("Thoát, để game chạy tiếp"))
+        alert.addButton(withTitle: L("Hủy"))
         switch alert.runModal() {
         case .alertFirstButtonReturn:
             Task { @MainActor in

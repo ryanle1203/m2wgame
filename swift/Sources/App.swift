@@ -9,6 +9,8 @@ struct M2WGameApp: App {
         Window("M2WGame", id: "main") {
             ContentView()
                 .environment(store)
+                .environment(\.locale, Locale(identifier: store.languageCode))
+                .id(store.languageCode)
                 .frame(minWidth: 860, minHeight: 560)
                 .task {
                     AppDelegate.store = store
@@ -18,17 +20,24 @@ struct M2WGameApp: App {
         .defaultSize(width: 1080, height: 720)
         .commands {
             CommandGroup(replacing: .newItem) {
-                Button("Thêm game…") {
+                Button(L("Thêm game…")) {
                     store.section = .library
                     store.showAddGame = true
                 }
                 .keyboardShortcut("n")
             }
-            CommandMenu("Đi tới") {
+            CommandMenu(L("Đi tới")) {
                 ForEach(Array(Store.Section.allCases.enumerated()), id: \.element) { index, section in
                     Button(section.title) { store.section = section }
                         .keyboardShortcut(KeyEquivalent(Character("\(index + 1)")))
                 }
+            }
+            CommandMenu(L("Ngôn ngữ")) {
+                Picker(L("Ngôn ngữ"), selection: Binding(get: { store.languageChoice },
+                                                         set: { store.languageChoice = $0 })) {
+                    ForEach(LanguageChoice.allCases) { Text($0.title).tag($0) }
+                }
+                .pickerStyle(.inline)
             }
         }
     }
@@ -76,6 +85,16 @@ struct Sidebar: View {
         .navigationSplitViewColumnWidth(min: 180, ideal: 210, max: 280)
         .safeAreaInset(edge: .bottom) {
             VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 6) {
+                    Image(systemName: "globe").foregroundStyle(.secondary)
+                    Picker("Ngôn ngữ", selection: $store.languageChoice) {
+                        ForEach(LanguageChoice.allCases) { Text($0.title).tag($0) }
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.menu)
+                    .controlSize(.small)
+                    .fixedSize()
+                }
                 if let d = store.snap?.download, !d.finished {
                     HStack(spacing: 6) {
                         ProgressView().controlSize(.small)
@@ -99,11 +118,11 @@ struct Sidebar: View {
 
 private func downloadLabel(_ d: DownloadItem) -> String {
     switch d.phase {
-    case "need_password": return "Tải game: cần mật khẩu"
-    case "need_code": return "Tải game: cần mã Steam Guard"
-    case "waiting_mobile": return "Tải game: chờ duyệt trên điện thoại"
-    case "downloading": return "Đang tải game \(Int(d.percent))%"
-    default: return "Đang chuẩn bị tải game…"
+    case "need_password": return L("Tải game: cần mật khẩu")
+    case "need_code": return L("Tải game: cần mã Steam Guard")
+    case "waiting_mobile": return L("Tải game: chờ duyệt trên điện thoại")
+    case "downloading": return L("Đang tải game %lld%%", Int(d.percent))
+    default: return L("Đang chuẩn bị tải game…")
     }
 }
 

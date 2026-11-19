@@ -28,7 +28,7 @@ struct LevelIcon: View {
         Image(systemName: level.symbol)
             .foregroundStyle(level.color)
             .imageScale(.large)
-            .accessibilityLabel(level == .ok ? "Tốt" : level == .warn ? "Lưu ý" : "Cần sửa")
+            .accessibilityLabel(level == .ok ? L("Tốt") : level == .warn ? L("Lưu ý") : L("Cần sửa"))
     }
 }
 
@@ -62,7 +62,7 @@ struct Badge: View {
     var color: Color = .secondary
 
     var body: some View {
-        Text(text)
+        Text(LocalizedStringKey(text))
             .font(.caption2.weight(.semibold))
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
@@ -73,7 +73,7 @@ struct Badge: View {
 
 /// Sheet footer: Cancel on the left of the default action, like macOS dialogs.
 struct SheetButtons: View {
-    var cancelTitle = "Hủy"
+    var cancelTitle = L("Hủy")
     let actionTitle: String
     var actionEnabled = true
     var destructive = false
@@ -83,9 +83,9 @@ struct SheetButtons: View {
     var body: some View {
         HStack {
             Spacer()
-            Button(cancelTitle, action: onCancel)
+            Button(LocalizedStringKey(cancelTitle), action: onCancel)
                 .keyboardShortcut(.cancelAction)
-            Button(actionTitle, role: destructive ? .destructive : nil, action: onAction)
+            Button(LocalizedStringKey(actionTitle), role: destructive ? .destructive : nil, action: onAction)
                 .keyboardShortcut(.defaultAction)
                 .buttonStyle(.borderedProminent)
                 .disabled(!actionEnabled)
@@ -115,8 +115,8 @@ struct NameSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(title).font(.headline)
-            Text(message).font(.subheadline).foregroundStyle(.secondary)
+            Text(LocalizedStringKey(title)).font(.headline)
+            Text(LocalizedStringKey(message)).font(.subheadline).foregroundStyle(.secondary)
             TextField("Tên", text: $text)
                 .textFieldStyle(.roundedBorder)
                 .focused($focused)

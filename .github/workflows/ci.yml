@@ -13,6 +13,8 @@ jobs:
         run: rustup toolchain install stable --profile minimal
       - name: Core tests
         run: cargo test --lib
+      - name: Every Vietnamese text in the window has an English entry
+        run: python3 scripts/check-swift-strings.py
   app-build:
     runs-on: macos-latest
     steps:

@@ -88,7 +88,15 @@ The app is ad-hoc signed only (not notarized).
 The English `README.md` is the reference. Translated READMEs live in `docs/i18n/README.<code>.md`
 (currently vi, zh-CN, es, ja, ko, pt-BR, fr, de). To add or fix one, copy an existing file, keep the
 same structure, and add your language to the switcher line at the top of every README. The app's
-own interface is Vietnamese only for now; making the UI translatable is a welcome contribution.
+own interface speaks Vietnamese (the language of the code) and English. To add another language:
+
+- **Core texts** (Rust): Vietnamese is the source, written as `t!("…")`. The English table is
+  `src/i18n_en.rs`; a test fails if a text has no English entry. For a new language, add a table
+  and a branch in `src/i18n.rs`.
+- **Window texts** (SwiftUI): copy `swift/Resources/en.lproj/Localizable.strings` to
+  `<code>.lproj`, translate the right-hand side, and add the language to `LanguageChoice` in
+  `swift/Sources/Language.swift`. `python3 scripts/check-swift-strings.py` lists texts that have
+  no entry.
 
 ## Reporting compatibility
 

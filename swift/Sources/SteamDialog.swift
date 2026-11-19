@@ -47,7 +47,7 @@ struct SteamDialogSheet: View {
                                 }
                             )
                     } else {
-                        Text(problem ?? "Đang chờ Steam mở…")
+                        Text(problem ?? L("Đang chờ Steam mở…"))
                             .foregroundStyle(.secondary)
                             .padding()
                     }

@@ -36,7 +36,7 @@ struct LibraryView: View {
                 }
             }
         }
-        .navigationTitle("Thư viện")
+        .navigationTitle(L("Thư viện"))
         .task {
             // Developer hook (see Store): open the first game's settings right away.
             guard store.startAction == "settings" else { return }
@@ -78,7 +78,8 @@ struct LibraryView: View {
             }
             Button("Hủy", role: .cancel) {}
         } message: { game in
-            Text("Xóa vĩnh viễn file game\(game.sizeBytes.map { " (\(formatBytes($0)))" } ?? "") khỏi máy để lấy lại dung lượng, và bỏ game khỏi thư viện. File lưu game (save) không bị xóa. Muốn chơi lại phải tải lại toàn bộ. Không hoàn tác được.")
+            Text(L("Xóa vĩnh viễn file game%@ khỏi máy để lấy lại dung lượng, và bỏ game khỏi thư viện. File lưu game (save) không bị xóa. Muốn chơi lại phải tải lại toàn bộ. Không hoàn tác được.",
+                   game.sizeBytes.map { " (\(formatBytes($0)))" } ?? ""))
         }
         .alert("Xóa \(removing?.name ?? "game") khỏi thư viện?",
                isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } }),
@@ -181,7 +182,7 @@ struct GameRow: View {
 
     private var subtitle: String {
         var parts: [String] = []
-        if let b = game.bottleName { parts.append(b) } else { parts.append("Môi trường đã bị xóa") }
+        if let b = game.bottleName { parts.append(b) } else { parts.append(L("Môi trường đã bị xóa")) }
         if game.isSteam { parts.append("Steam") }
         if let size = game.sizeBytes, size > 0 { parts.append(formatBytes(size)) }
         return parts.joined(separator: " · ")
@@ -265,7 +266,7 @@ struct AddGameSheet: View {
     var body: some View {
         VStack(spacing: 0) {
             Picker("Cách thêm", selection: $mode) {
-                ForEach(Mode.allCases) { Text($0.rawValue).tag($0) }
+                ForEach(Mode.allCases) { Text(LocalizedStringKey($0.rawValue)).tag($0) }
             }
             .pickerStyle(.segmented)
             .labelsHidden()
@@ -469,7 +470,7 @@ struct DownloadPanel: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(job.name ?? "Game \(job.appid)").font(.headline)
+            Text(job.name ?? L("Game %@", "\(job.appid)")).font(.headline)
             switch job.phase {
             case "need_password":
                 prompt(field: SecureField("Mật khẩu Steam", text: $secret), button: "Gửi")
@@ -501,7 +502,7 @@ struct DownloadPanel: View {
             HStack {
                 Spacer()
                 if job.finished {
-                    Button(job.phase == "done" ? "Xong" : "Đóng") {
+                    Button(job.phase == "done" ? L("Xong") : L("Đóng")) {
                         Task { await store.send(["cmd": "steam_dl_clear"]) }
                     }
                     .buttonStyle(.borderedProminent)
@@ -518,7 +519,7 @@ struct DownloadPanel: View {
     private func prompt<F: View>(field: F, button: String) -> some View {
         HStack {
             field.onSubmit(submit)
-            Button(button, action: submit)
+            Button(LocalizedStringKey(button), action: submit)
                 .buttonStyle(.borderedProminent)
                 .disabled(secret.isEmpty)
         }
@@ -551,12 +552,12 @@ struct ExeAddView: View {
                         .focused($nameFocused)
                     LabeledContent("File chạy (.exe)") {
                         HStack {
-                            Text(exe.isEmpty ? "Chưa chọn" : exe)
+                            Text(exe.isEmpty ? L("Chưa chọn") : exe)
                                 .lineLimit(1)
                                 .truncationMode(.middle)
                                 .foregroundStyle(exe.isEmpty ? .tertiary : .secondary)
                             Button("Chọn…") {
-                                if let p = chooseFile(message: "Chọn file .exe của game", extensions: ["exe"]) {
+                                if let p = chooseFile(message: L("Chọn file .exe của game"), extensions: ["exe"]) {
                                     exe = p
                                     if name.isEmpty {
                                         name = URL(fileURLWithPath: p).deletingPathExtension().lastPathComponent
@@ -658,7 +659,7 @@ struct GameSettingsSheet: View {
                             }
                         }
                         if original.steamAppid != nil {
-                            Button("Gỡ game khỏi máy…\(original.sizeBytes.map { " (giải phóng \(formatBytes($0)))" } ?? "")", role: .destructive, action: onUninstall)
+                            Button(L("Gỡ game khỏi máy…%@", original.sizeBytes.map { L(" (giải phóng %@)", formatBytes($0)) } ?? ""), role: .destructive, action: onUninstall)
                         }
                     } header: {
                         Text("Steam")
@@ -701,7 +702,7 @@ struct GameSettingsSheet: View {
                                 .font(.caption).foregroundStyle(.secondary)
                         }
                         DisclosureGroup("Lệnh sẽ chạy (theo cài đặt đã lưu)") {
-                            Text(preview ?? "Đang đọc…")
+                            Text(preview ?? L("Đang đọc…"))
                                 .font(.system(.caption, design: .monospaced))
                                 .textSelection(.enabled)
                                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -729,8 +730,8 @@ struct GameSettingsSheet: View {
 
     private func option(_ title: String, _ detail: String) -> some View {
         VStack(alignment: .leading, spacing: 1) {
-            Text(title)
-            Text(detail).font(.caption).foregroundStyle(.secondary)
+            Text(LocalizedStringKey(title))
+            Text(LocalizedStringKey(detail)).font(.caption).foregroundStyle(.secondary)
         }
     }
 }
@@ -784,7 +785,7 @@ struct LogSheet: View {
                 Spacer()
             } else {
                 ScrollView {
-                    Text(reply?.text?.isEmpty == false ? reply!.text! : "(log trống)")
+                    Text(reply?.text?.isEmpty == false ? reply!.text! : L("(log trống)"))
                         .font(.system(size: 11, design: .monospaced))
                         .textSelection(.enabled)
                         .frame(maxWidth: .infinity, alignment: .leading)

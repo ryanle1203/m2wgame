@@ -4,7 +4,7 @@
 
 M2W = Mac para Windows (jogos). Um app para **rodar jogos de Windows em Macs com Apple Silicon**: gerencia "garrafas" do Wine (ambientes Windows independentes), motores Wine, o Steam para Windows e sua biblioteca de jogos, e explica os problemas em linguagem simples em vez de despejar uma montanha de logs.
 
-> **Status: alfa inicial.** Funciona com alguns jogos e com outros não. Leia as "Limitações" antes de gastar tempo com um jogo. A interface do app está, por enquanto, **somente em vietnamita**; traduções são bem-vindas. O README em inglês é a referência e as traduções podem ficar defasadas.
+> **Status: alfa inicial.** Funciona com alguns jogos e com outros não. Leia as "Limitações" antes de gastar tempo com um jogo. A interface do app está disponível em **vietnamita e inglês** (troque na barra lateral); outros idiomas são bem-vindos. O README em inglês é a referência e as traduções podem ficar defasadas.
 
 > **Escopo:** o M2WGame foca em um único problema: rodar **jogos de Windows comprados na Steam**. Outras lojas e launchers (Epic, GOG, EA, Ubisoft, Battle.net, itch.io…) ainda não são suportados. Você pode adicionar um `.exe` avulso manualmente, mas esse caminho não foi testado.
 

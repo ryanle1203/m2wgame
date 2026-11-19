@@ -35,7 +35,7 @@ struct EnginesView: View {
                 .formStyle(.grouped)
             }
         }
-        .navigationTitle("Động cơ")
+        .navigationTitle(L("Động cơ"))
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
                 Button {
@@ -59,7 +59,7 @@ struct EnginesView: View {
     }
 
     private func addEngine() {
-        if let p = chooseFile(message: "Chọn file wine64 (hoặc wine) trong thư mục bin của động cơ", insideBundles: true) {
+        if let p = chooseFile(message: L("Chọn file wine64 (hoặc wine) trong thư mục bin của động cơ"), insideBundles: true) {
             Task { await store.send(["cmd": "add_runtime", "path": p]) }
         }
     }
@@ -89,7 +89,7 @@ struct EngineRow: View {
                     if runtime.old { Badge(text: "Bản cũ", color: .orange) }
                     if runtime.active { Badge(text: "Mặc định", color: .green) }
                 }
-                Text(runtime.version ?? "đang đọc phiên bản…")
+                Text(runtime.version ?? L("đang đọc phiên bản…"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Text(runtime.path)

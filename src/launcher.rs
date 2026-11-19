@@ -242,7 +242,7 @@ pub fn kill_bottle(runtime: &Runtime, bottle: &Bottle) {
 
 /// Create the Windows environment on disk. Takes a while the first time.
 pub fn init_bottle(runtime: &Runtime, bottle: &Bottle) -> Result<(), String> {
-    std::fs::create_dir_all(bottle.path()).map_err(|e| format!("Không tạo được thư mục: {e}"))?;
+    std::fs::create_dir_all(bottle.path()).map_err(|e| t!("Không tạo được thư mục: {}", e))?;
 
     let mut cmd = Command::new(&runtime.wine_bin);
     cmd.args(["wineboot", "--init"])
@@ -255,7 +255,7 @@ pub fn init_bottle(runtime: &Runtime, bottle: &Bottle) -> Result<(), String> {
     }
     let out = cmd
         .output()
-        .map_err(|e| format!("Không chạy được Wine ({}): {e}", runtime.wine_bin.display()))?;
+        .map_err(|e| t!("Không chạy được Wine ({}): {}", runtime.wine_bin.display(), e))?;
 
     // Wait for Wine's background service to finish writing the registry.
     let mut wait = Command::new(runtime.wineserver());
@@ -270,7 +270,7 @@ pub fn init_bottle(runtime: &Runtime, bottle: &Bottle) -> Result<(), String> {
     } else {
         let stderr = String::from_utf8_lossy(&out.stderr);
         let tail: String = stderr.lines().rev().take(6).collect::<Vec<_>>().into_iter().rev().collect::<Vec<_>>().join("\n");
-        Err(format!("Wine không tạo được môi trường.\n{tail}"))
+        Err(t!("Wine không tạo được môi trường.\n{}", tail))
     }
 }
 
@@ -287,14 +287,11 @@ pub fn download_steam_installer() -> Result<PathBuf, String> {
         .arg(&target)
         .arg(STEAM_INSTALLER_URL)
         .output()
-        .map_err(|e| format!("Không chạy được curl: {e}"))?;
+        .map_err(|e| t!("Không chạy được curl: {}", e))?;
     if out.status.success() && target.is_file() {
         Ok(target)
     } else {
-        Err(format!(
-            "Tải Steam thất bại. Kiểm tra kết nối mạng.\n{}",
-            String::from_utf8_lossy(&out.stderr).trim()
-        ))
+        Err(t!("Tải Steam thất bại. Kiểm tra kết nối mạng.\n{}", String::from_utf8_lossy(&out.stderr).trim()))
     }
 }
 

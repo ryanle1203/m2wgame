@@ -13,9 +13,9 @@ struct SystemView: View {
                                 .font(.largeTitle)
                                 .foregroundStyle(snap.system.ready ? Color.green : Color.orange)
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(snap.system.ready ? "Máy đã sẵn sàng chạy game" : "Còn thiếu vài thứ")
+                                Text(snap.system.ready ? L("Máy đã sẵn sàng chạy game") : L("Còn thiếu vài thứ"))
                                     .font(.headline)
-                                Text(snap.system.ready ? "Các mục bên dưới đều ổn." : "Xem các mục có dấu cảnh báo bên dưới.")
+                                Text(snap.system.ready ? L("Các mục bên dưới đều ổn.") : L("Xem các mục có dấu cảnh báo bên dưới."))
                                     .font(.callout)
                                     .foregroundStyle(.secondary)
                             }
@@ -40,7 +40,7 @@ struct SystemView: View {
                 ProgressView()
             }
         }
-        .navigationTitle("Hệ thống")
+        .navigationTitle(L("Hệ thống"))
     }
 }
 
@@ -58,7 +58,7 @@ struct NetSection: View {
                 if info.busy {
                     ProgressView().controlSize(.small)
                 } else {
-                    Button(info.results == nil ? "Kiểm tra mạng" : "Kiểm tra lại") {
+                    Button(info.results == nil ? L("Kiểm tra mạng") : L("Kiểm tra lại")) {
                         Task { await store.send(["cmd": "check_net"]) }
                     }
                 }

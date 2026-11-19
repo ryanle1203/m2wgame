@@ -40,7 +40,7 @@ impl SystemInfo {
     pub fn detect() -> Self {
         let arch = run("uname", &["-m"]).unwrap_or_default();
         let chip = run("sysctl", &["-n", "machdep.cpu.brand_string"])
-            .unwrap_or_else(|| "Không rõ".to_string());
+            .unwrap_or_else(|| t!("Không rõ").to_string());
         let macos = run("sw_vers", &["-productVersion"]).unwrap_or_default();
         let ram_bytes: u64 = run("sysctl", &["-n", "hw.memsize"])
             .and_then(|s| s.parse().ok())
@@ -73,31 +73,31 @@ impl SystemInfo {
 
         let apple_silicon = self.arch == "arm64";
         out.push(Check {
-            label: "Chip Apple Silicon".into(),
+            label: t!("Chip Apple Silicon").into(),
             detail: if apple_silicon {
                 self.chip.clone()
             } else {
-                "Máy này không phải chip Apple Silicon (M1/M2/M3/M4...). Công cụ chạy game cần chip này.".into()
+                t!("Máy này không phải chip Apple Silicon (M1/M2/M3/M4...). Công cụ chạy game cần chip này.").into()
             },
             level: if apple_silicon { Level::Ok } else { Level::Bad },
         });
 
         let major = self.macos_major();
         out.push(Check {
-            label: "Phiên bản macOS".into(),
-            detail: format!("macOS {} (cần macOS 14 trở lên)", self.macos),
+            label: t!("Phiên bản macOS").into(),
+            detail: t!("macOS {} (cần macOS 14 trở lên)", self.macos),
             level: if major >= 14 { Level::Ok } else { Level::Bad },
         });
 
         let (ram_level, ram_note) = if self.ram_gb >= 16 {
-            (Level::Ok, "đủ cho hầu hết game")
+            (Level::Ok, t!("đủ cho hầu hết game"))
         } else if self.ram_gb >= 8 {
-            (Level::Warn, "game nặng có thể bị giật, nên có 16 GB")
+            (Level::Warn, t!("game nặng có thể bị giật, nên có 16 GB"))
         } else {
-            (Level::Bad, "quá ít để chạy game Windows")
+            (Level::Bad, t!("quá ít để chạy game Windows"))
         };
         out.push(Check {
-            label: "Bộ nhớ RAM".into(),
+            label: t!("Bộ nhớ RAM").into(),
             detail: format!("{} GB, {}", self.ram_gb, ram_note),
             level: ram_level,
         });
@@ -105,17 +105,17 @@ impl SystemInfo {
         out.push(Check {
             label: "Rosetta 2".into(),
             detail: if self.rosetta {
-                "Đã cài".into()
+                t!("Đã cài").into()
             } else {
-                "Chưa cài. Mở Terminal và gõ: softwareupdate --install-rosetta --agree-to-license".into()
+                t!("Chưa cài. Mở Terminal và gõ: softwareupdate --install-rosetta --agree-to-license").into()
             },
             level: if self.rosetta { Level::Ok } else { Level::Bad },
         });
 
         match self.free_disk_gb {
             Some(gb) => out.push(Check {
-                label: "Dung lượng trống".into(),
-                detail: format!("{} GB còn trống", gb),
+                label: t!("Dung lượng trống").into(),
+                detail: t!("{} GB còn trống", gb),
                 level: if gb >= 30 {
                     Level::Ok
                 } else if gb >= 10 {
@@ -125,18 +125,18 @@ impl SystemInfo {
                 },
             }),
             None => out.push(Check {
-                label: "Dung lượng trống".into(),
-                detail: "Không đọc được".into(),
+                label: t!("Dung lượng trống").into(),
+                detail: t!("Không đọc được").into(),
                 level: Level::Warn,
             }),
         }
 
         out.push(Check {
-            label: "Động cơ chạy game (Wine)".into(),
+            label: t!("Động cơ chạy game (Wine)").into(),
             detail: if has_runtime {
-                "Đã tìm thấy. Xem ở mục Động cơ.".into()
+                t!("Đã tìm thấy. Xem ở mục Động cơ.").into()
             } else {
-                "Chưa có. Vào mục Động cơ để xem cách cài.".into()
+                t!("Chưa có. Vào mục Động cơ để xem cách cài.").into()
             },
             level: if has_runtime { Level::Ok } else { Level::Bad },
         });
@@ -176,6 +176,18 @@ mod tests {
             rosetta,
             free_disk_gb: Some(100),
         }
+    }
+
+    #[test]
+    fn checks_speak_english_when_asked() {
+        let labels: Vec<String> = crate::i18n::with_lang(crate::i18n::Lang::En, || {
+            info("arm64", "15.2", 16, true).checks(true).into_iter().map(|c| c.label).collect()
+        });
+        assert!(labels.contains(&"macOS version".to_string()), "{labels:?}");
+        assert!(labels.contains(&"Apple Silicon chip".to_string()), "{labels:?}");
+        assert!(labels.contains(&"Memory (RAM)".to_string()), "{labels:?}");
+        let vi: Vec<String> = info("arm64", "15.2", 16, true).checks(true).into_iter().map(|c| c.label).collect();
+        assert!(vi.contains(&"Phiên bản macOS".to_string()));
     }
 
     #[test]

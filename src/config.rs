@@ -64,7 +64,7 @@ impl Config {
 
     pub fn ensure_default_bottle(&mut self) {
         if self.bottles.is_empty() {
-            self.bottles.push(Bottle::new("Mặc định"));
+            self.bottles.push(Bottle::new(t!("Mặc định")));
         }
     }
 }

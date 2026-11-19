@@ -20,7 +20,7 @@ use crate::config::Config;
 use crate::game::Game;
 use crate::runtime::{self, Runtime};
 use crate::system::{Level, SystemInfo};
-use crate::{diagnose, launcher, net, paths, steam, steamdl, util};
+use crate::{diagnose, i18n, launcher, net, paths, steam, steamdl, util};
 
 enum Msg {
     BottleReady {
@@ -59,7 +59,7 @@ pub fn handle_steam_ui(req: &Value) -> Option<Value> {
     let id = arg_str(req, "id").unwrap_or_default();
     let port = ASSIST_PORTS.lock().ok()?.as_ref().and_then(|m| m.get(&id).copied());
     let Some(port) = port else {
-        return Some(json!({"ok": false, "error": "Cổng xem Steam của game này chưa mở."}));
+        return Some(json!({"ok": false, "error": t!("Cổng xem Steam của game này chưa mở.")}));
     };
     let num = |k: &str| req.get(k).and_then(Value::as_f64).unwrap_or(0.0);
     let result: Result<Value, String> = match cmd {
@@ -67,7 +67,7 @@ pub fn handle_steam_ui(req: &Value) -> Option<Value> {
         "steam_ui_click" => crate::cdp::click(port, num("x"), num("y")).map(|_| json!({"ok": true})),
         "steam_ui_scroll" => crate::cdp::scroll(port, num("x"), num("y"), num("dy")).map(|_| json!({"ok": true})),
         "steam_ui_text" => crate::cdp::insert_text(port, &arg_str(req, "text").unwrap_or_default()).map(|_| json!({"ok": true})),
-        _ => Err(format!("lệnh không hỗ trợ: {cmd}")),
+        _ => Err(t!("lệnh không hỗ trợ: {}", cmd)),
     };
     Some(result.unwrap_or_else(|e| json!({"ok": false, "error": e})))
 }
@@ -343,7 +343,7 @@ impl Core {
         if self.dirty {
             self.dirty = false;
             if let Err(e) = self.cfg.save() {
-                self.err(format!("Không lưu được cài đặt: {e}"));
+                self.err(t!("Không lưu được cài đặt: {}", e));
             }
         }
     }
@@ -355,7 +355,7 @@ impl Core {
             return;
         };
         let Some(rt) = self.runtime_for(&bottle).cloned() else {
-            self.err("Chưa có động cơ chạy game. Vào mục Động cơ để cài.");
+            self.err(t!("Chưa có động cơ chạy game. Vào mục Động cơ để cài."));
             return;
         };
         if !self.busy_bottles.insert(bottle.id.clone()) {
@@ -375,7 +375,7 @@ impl Core {
         if !self.busy_steam.insert(bottle_id.to_string()) {
             return;
         }
-        self.info("Đang tải bộ cài Steam chính thức từ Valve...");
+        self.info(t!("Đang tải bộ cài Steam chính thức từ Valve..."));
         let tx = self.tx.clone();
         let id = bottle_id.to_string();
         std::thread::spawn(move || {
@@ -405,7 +405,7 @@ impl Core {
                     }
                     match result {
                         Ok(()) => {
-                            self.info("Môi trường đã sẵn sàng.");
+                            self.info(t!("Môi trường đã sẵn sàng."));
                             for gid in waiting {
                                 self.play(&gid);
                             }
@@ -443,8 +443,8 @@ impl Core {
                             }
                             self.bits_cache.borrow_mut().remove(&format!("{bottle_id}/{appid}"));
                             self.dirty = true;
-                            let freed = if freed > 0 { format!(", giải phóng {}", util::human_bytes(freed)) } else { String::new() };
-                            self.info(format!("Đã gỡ {name} khỏi máy{freed}."));
+                            let freed = if freed > 0 { t!(", giải phóng {}", util::human_bytes(freed)) } else { String::new() };
+                            self.info(t!("Đã gỡ {} khỏi máy{}.", name, freed));
                         }
                         Err(e) => self.err(e),
                     }
@@ -460,7 +460,7 @@ impl Core {
                 }
                 Msg::Stopped { id, label } => {
                     self.stopping.remove(&id);
-                    self.info(format!("Đã dừng {label}."));
+                    self.info(t!("Đã dừng {}.", label));
                     if self.assist_pending.remove(&id) {
                         self.play_with(&id, true);
                     }
@@ -468,7 +468,7 @@ impl Core {
                 Msg::Versions(found) => {
                     for (bin, version) in found {
                         if let Some(r) = self.runtimes.iter_mut().find(|r| r.wine_bin == bin) {
-                            r.version = version.or_else(|| Some("không đọc được".to_string()));
+                            r.version = version.or_else(|| Some(t!("không đọc được").to_string()));
                         }
                     }
                 }
@@ -494,13 +494,13 @@ impl Core {
                         steam_log_offset: 0,
                         child,
                         started: Instant::now(),
-                        label: "Bộ cài Steam".into(),
+                        label: t!("Bộ cài Steam").into(),
                         bottle_id: bottle_id.to_string(),
                     },
                 );
-                self.info("Đã mở bộ cài Steam. Làm theo cửa sổ cài đặt, xong thì quay lại đây bấm Thêm Steam vào thư viện.");
+                self.info(t!("Đã mở bộ cài Steam. Làm theo cửa sổ cài đặt, xong thì quay lại đây bấm Thêm Steam vào thư viện."));
             }
-            Err(e) => self.err(format!("Không mở được bộ cài Steam: {e}")),
+            Err(e) => self.err(t!("Không mở được bộ cài Steam: {}", e)),
         }
     }
 
@@ -522,24 +522,18 @@ impl Core {
                     self.hints_for(&id, true)
                         .into_iter()
                         .next()
-                        .map(|h| format!(" Gợi ý: {}", h.text))
+                        .map(|h| t!(" Gợi ý: {}", h.text))
                         .unwrap_or_default()
                 } else {
                     String::new()
                 };
                 match code {
                     Some(0) if steam_restart => self.info(
-                        "Steam vừa cập nhật xong và đang tự khởi động lại. Đợi khoảng một phút, cửa sổ Steam sẽ hiện ra. Nếu sau đó không thấy gì, bấm Chơi lần nữa.",
+                        t!("Steam vừa cập nhật xong và đang tự khởi động lại. Đợi khoảng một phút, cửa sổ Steam sẽ hiện ra. Nếu sau đó không thấy gì, bấm Chơi lần nữa."),
                     ),
-                    Some(0) => self.info(format!("{} đã đóng.", r.label)),
-                    Some(c) => self.err(format!(
-                        "{} dừng với mã lỗi {c}.{tip} Bấm Log để xem chi tiết.",
-                        r.label
-                    )),
-                    None => self.err(format!(
-                        "{} bị tắt đột ngột.{tip} Bấm Log để xem chi tiết.",
-                        r.label
-                    )),
+                    Some(0) => self.info(t!("{} đã đóng.", r.label)),
+                    Some(c) => self.err(t!("{} dừng với mã lỗi {}.{} Bấm Log để xem chi tiết.", r.label, c, tip)),
+                    None => self.err(t!("{} bị tắt đột ngột.{} Bấm Log để xem chi tiết.", r.label, tip)),
                 }
             }
         }
@@ -612,10 +606,10 @@ impl Core {
         use steamdl::Phase::*;
         match job.phase {
             NeedPassword | NeedCode | WaitingMobile => {
-                self.info(format!("Tải game: {} Mở Thêm game > Từ Steam để trả lời.", job.message));
+                self.info(t!("Tải game: {} Mở Thêm game > Từ Steam để trả lời.", job.message));
             }
             Done => self.info(job.message.clone()),
-            Failed => self.err(format!("Tải game không thành công: {}", job.message)),
+            Failed => self.err(t!("Tải game không thành công: {}", job.message)),
             _ => {}
         }
     }
@@ -647,26 +641,26 @@ impl Core {
         let mut assist_port = None;
         if assist {
             let Some(port) = free_port() else {
-                self.err("Không tìm được cổng trống để mở hộp thoại Steam.");
+                self.err(t!("Không tìm được cổng trống để mở hộp thoại Steam."));
                 return;
             };
             game.args = steam::assist_args(&game.args, port);
             assist_port = Some(port);
         }
         let Some(bottle) = self.cfg.bottle(&game.bottle_id).cloned() else {
-            self.err("Game này trỏ tới một môi trường đã bị xóa. Mở Cài đặt của game và chọn lại môi trường.");
+            self.err(t!("Game này trỏ tới một môi trường đã bị xóa. Mở Cài đặt của game và chọn lại môi trường."));
             return;
         };
         let Some(rt) = self.runtime_for(&bottle).cloned() else {
-            self.err("Chưa có động cơ chạy game. Vào mục Động cơ để cài.");
+            self.err(t!("Chưa có động cơ chạy game. Vào mục Động cơ để cài."));
             return;
         };
         if game.exe_missing() {
-            self.err("Không tìm thấy file game. Ổ đĩa có thể chưa cắm, hoặc game đã bị di chuyển.");
+            self.err(t!("Không tìm thấy file game. Ổ đĩa có thể chưa cắm, hoặc game đã bị di chuyển."));
             return;
         }
         if self.stopping.contains(&game.id) {
-            self.info("Game đang được dừng, đợi vài giây rồi bấm Chơi lại.");
+            self.info(t!("Game đang được dừng, đợi vài giây rồi bấm Chơi lại."));
             return;
         }
         if self.running.contains_key(&game.id) {
@@ -674,7 +668,7 @@ impl Core {
         }
         if !bottle.is_initialized() {
             self.pending_play.insert(game.id.clone());
-            self.info("Lần đầu dùng môi trường này nên cần khởi tạo (vài phút). Game sẽ tự chạy khi xong.");
+            self.info(t!("Lần đầu dùng môi trường này nên cần khởi tạo (vài phút). Game sẽ tự chạy khi xong."));
             self.start_init(&bottle.id);
             return;
         }
@@ -698,9 +692,9 @@ impl Core {
                         bottle_id: bottle.id.clone(),
                     },
                 );
-                self.info(format!("Đang mở {}. Lần đầu có thể mất 1-2 phút.", game.name));
+                self.info(t!("Đang mở {}. Lần đầu có thể mất 1-2 phút.", game.name));
             }
-            Err(e) => self.err(format!("Không chạy được game: {e}")),
+            Err(e) => self.err(t!("Không chạy được game: {}", e)),
         }
     }
 
@@ -754,7 +748,7 @@ impl Core {
         };
         let exe = bottle.steam_exe();
         if self.cfg.games.iter().any(|g| g.exe == exe) {
-            self.info("Steam đã có trong thư viện.");
+            self.info(t!("Steam đã có trong thư viện."));
             return;
         }
         // -no-cef-sandbox: Steam's built-in browser does not start in Wine's sandbox.
@@ -767,14 +761,14 @@ impl Core {
             "-no-cef-sandbox -cef-disable-gpu".into(),
         ));
         self.dirty = true;
-        self.info("Đã thêm Steam vào thư viện. Nếu Steam báo lỗi hoặc màn hình đen, mở Cài đặt của nó để thử tùy chọn khác.");
+        self.info(t!("Đã thêm Steam vào thư viện. Nếu Steam báo lỗi hoặc màn hình đen, mở Cài đặt của nó để thử tùy chọn khác."));
     }
 
     fn create_bottle(&mut self, name: &str) -> Result<(), String> {
         let name = name.trim();
         if name.is_empty() {
-            self.err("Hãy đặt tên cho môi trường mới.");
-            return Err("Hãy đặt tên cho môi trường mới.".into());
+            self.err(t!("Hãy đặt tên cho môi trường mới."));
+            return Err(t!("Hãy đặt tên cho môi trường mới.").into());
         }
         self.cfg.bottles.push(Bottle::new(name));
         self.dirty = true;
@@ -789,7 +783,7 @@ impl Core {
             self.dirty = true;
         }
         if was_ready {
-            self.info("Đã đổi động cơ. Môi trường này đã được tạo bằng động cơ khác, nếu game lỗi hãy tạo một môi trường mới cho động cơ này.");
+            self.info(t!("Đã đổi động cơ. Môi trường này đã được tạo bằng động cơ khác, nếu game lỗi hãy tạo một môi trường mới cho động cơ này."));
         }
     }
 
@@ -799,13 +793,13 @@ impl Core {
             Some("wine64") | Some("wine")
         );
         if !ok {
-            self.err("File này không phải wine64 hoặc wine. Thường nằm trong thư mục bin của động cơ.");
+            self.err(t!("File này không phải wine64 hoặc wine. Thường nằm trong thư mục bin của động cơ."));
         } else if !self.cfg.custom_runtimes.contains(&path) {
             self.cfg.custom_runtimes.push(path.clone());
             self.rescan();
             self.cfg.active_runtime = Some(path);
             self.dirty = true;
-            self.info("Đã thêm động cơ.");
+            self.info(t!("Đã thêm động cơ."));
         }
     }
 
@@ -827,7 +821,7 @@ impl Core {
         self.last_logs.remove(id);
         self.exits.remove(id);
         self.dirty = true;
-        self.info("Đã xóa khỏi thư viện. File game trên máy vẫn còn nguyên.");
+        self.info(t!("Đã xóa khỏi thư viện. File game trên máy vẫn còn nguyên."));
     }
 
     fn remove_bottle(&mut self, id: &str) -> Result<(), String> {
@@ -836,40 +830,40 @@ impl Core {
             || self.running.values().any(|r| r.bottle_id == id)
             || !self.stopping.is_empty();
         if active {
-            let msg = "Môi trường này đang được dùng (game đang chạy, đang dừng hoặc đang khởi tạo). Hãy đợi xong hoặc dừng game trước.".to_string();
+            let msg = t!("Môi trường này đang được dùng (game đang chạy, đang dừng hoặc đang khởi tạo). Hãy đợi xong hoặc dừng game trước.").to_string();
             self.err(msg.clone());
             return Err(msg);
         }
         let in_use = self.cfg.games.iter().filter(|g| g.bottle_id == id).count();
         if in_use > 0 {
-            let msg = format!("Còn {in_use} game đang dùng môi trường này. Hãy chuyển hoặc xóa các game đó trước.");
+            let msg = t!("Còn {} game đang dùng môi trường này. Hãy chuyển hoặc xóa các game đó trước.", in_use);
             self.err(msg.clone());
             return Err(msg);
         }
         if self.cfg.bottles.len() <= 1 {
-            self.err("Cần giữ ít nhất một môi trường.");
-            return Err("Cần giữ ít nhất một môi trường.".into());
+            self.err(t!("Cần giữ ít nhất một môi trường."));
+            return Err(t!("Cần giữ ít nhất một môi trường.").into());
         }
         let Some(bottle) = self.cfg.bottle(id).cloned() else {
-            return Err("Không tìm thấy môi trường.".into());
+            return Err(t!("Không tìm thấy môi trường.").into());
         };
         let dir = bottle.path();
         // Safety: only ever delete inside M2WGame's own Bottles folder.
         if !dir.starts_with(paths::bottles_dir()) || dir == paths::bottles_dir() {
-            let msg = "Đường dẫn môi trường không hợp lệ, đã hủy để an toàn.".to_string();
+            let msg = t!("Đường dẫn môi trường không hợp lệ, đã hủy để an toàn.").to_string();
             self.err(msg.clone());
             return Err(msg);
         }
         if dir.exists() {
             if let Err(e) = std::fs::remove_dir_all(&dir) {
-                let msg = format!("Không xóa được thư mục môi trường: {e}");
+                let msg = t!("Không xóa được thư mục môi trường: {}", e);
                 self.err(msg.clone());
                 return Err(msg);
             }
         }
         self.cfg.bottles.retain(|b| b.id != id);
         self.dirty = true;
-        self.info(format!("Đã xóa môi trường {}.", bottle.name));
+        self.info(t!("Đã xóa môi trường {}.", bottle.name));
         Ok(())
     }
 
@@ -1026,6 +1020,7 @@ impl Core {
 
         json!({
             "ok": true,
+            "language": i18n::code(),
             "games": games,
             "steam_games": steam_games,
             "lookup": self.lookup,
@@ -1063,7 +1058,7 @@ impl Core {
     }
 
     fn dispatch(&mut self, cmd: &str, req: &Value) -> Result<Value, String> {
-        let id = || arg_str(req, "id").ok_or_else(|| "thiếu id".to_string());
+        let id = || arg_str(req, "id").ok_or_else(|| t!("thiếu id").to_string());
         match cmd {
             "state" => return Ok(self.state()),
             "play" => self.play(&id()?),
@@ -1073,7 +1068,7 @@ impl Core {
                 let exe = arg_str(req, "exe").unwrap_or_default();
                 let bottle_id = arg_str(req, "bottle_id").unwrap_or_default();
                 if name.trim().is_empty() || exe.is_empty() || self.cfg.bottle(&bottle_id).is_none() {
-                    return Err("Cần có tên, file .exe và môi trường hợp lệ.".into());
+                    return Err(t!("Cần có tên, file .exe và môi trường hợp lệ.").into());
                 }
                 self.cfg.games.push(Game::new(
                     name.trim().to_string(),
@@ -1082,20 +1077,20 @@ impl Core {
                     arg_str(req, "args").unwrap_or_default().trim().to_string(),
                 ));
                 self.dirty = true;
-                self.info("Đã thêm game. Bấm Chơi để chạy.");
+                self.info(t!("Đã thêm game. Bấm Chơi để chạy."));
             }
             "update_game" => {
                 let game: Game = serde_json::from_value(req.get("game").cloned().unwrap_or(Value::Null))
-                    .map_err(|e| format!("game không hợp lệ: {e}"))?;
+                    .map_err(|e| t!("game không hợp lệ: {}", e))?;
                 let Some(slot) = self.cfg.games.iter_mut().find(|g| g.id == game.id) else {
-                    return Err("Không tìm thấy game.".into());
+                    return Err(t!("Không tìm thấy game.").into());
                 };
                 let changed = *slot != game;
                 *slot = game;
                 self.dirty = true;
                 let id = slot.id.clone();
                 if changed && (self.running.contains_key(&id) || self.stopping.contains(&id)) {
-                    self.info("Đã lưu. Game đang chạy nên thay đổi chỉ có hiệu lực ở lần chạy sau: bấm Dừng rồi Chơi lại.");
+                    self.info(t!("Đã lưu. Game đang chạy nên thay đổi chỉ có hiệu lực ở lần chạy sau: bấm Dừng rồi Chơi lại."));
                 }
             }
             "remove_game" => self.remove_game(&id()?),
@@ -1104,7 +1099,7 @@ impl Core {
             "rename_bottle" => {
                 let name = arg_str(req, "name").unwrap_or_default();
                 if name.trim().is_empty() {
-                    return Err("Tên không được để trống.".into());
+                    return Err(t!("Tên không được để trống.").into());
                 }
                 let id = id()?;
                 if let Some(b) = self.cfg.bottles.iter_mut().find(|b| b.id == id) {
@@ -1121,32 +1116,32 @@ impl Core {
                 self.set_bottle_runtime(&id()?, rt);
             }
             "install_steam" => {
-                let bottle_id = arg_str(req, "bottle_id").ok_or("thiếu bottle_id")?;
+                let bottle_id = arg_str(req, "bottle_id").ok_or(t!("thiếu bottle_id"))?;
                 self.start_steam_download(&bottle_id);
             }
             "add_steam" => {
-                let bottle_id = arg_str(req, "bottle_id").ok_or("thiếu bottle_id")?;
+                let bottle_id = arg_str(req, "bottle_id").ok_or(t!("thiếu bottle_id"))?;
                 self.add_steam(&bottle_id);
             }
             "use_runtime" => {
-                let path = arg_str(req, "path").ok_or("thiếu path")?;
+                let path = arg_str(req, "path").ok_or(t!("thiếu path"))?;
                 self.cfg.active_runtime = Some(PathBuf::from(path));
                 self.dirty = true;
             }
             "add_runtime" => {
-                let path = arg_str(req, "path").ok_or("thiếu path")?;
+                let path = arg_str(req, "path").ok_or(t!("thiếu path"))?;
                 self.add_runtime(PathBuf::from(path));
             }
             "rescan" => {
                 self.rescan();
                 let n = self.runtimes.len();
-                self.info(format!("Đã quét lại. Tìm thấy {n} động cơ."));
+                self.info(t!("Đã quét lại. Tìm thấy {} động cơ.", n));
             }
             "check_net" => self.start_net_check(),
             "steam_lookup" => {
                 let input = arg_str(req, "input").unwrap_or_default();
                 let Some(appid) = steam::parse_app_id(&input) else {
-                    return Err("Hãy dán đường dẫn trang game trên cửa hàng Steam (có chữ /app/ và một dãy số) hoặc chỉ mã số của game.".into());
+                    return Err(t!("Hãy dán đường dẫn trang game trên cửa hàng Steam (có chữ /app/ và một dãy số) hoặc chỉ mã số của game.").into());
                 };
                 self.lookup = Some(LookupState { appid: appid.clone(), busy: true, name: None, windows: true, error: None });
                 let tx = self.tx.clone();
@@ -1156,11 +1151,18 @@ impl Core {
                 });
             }
             "steam_lookup_clear" => self.lookup = None,
+            "set_language" => {
+                // The window picks the language (its own setting, or the system's); every text the
+                // core produces from now on uses it.
+                let code = arg_str(req, "lang").unwrap_or_default();
+                i18n::set_lang(&code);
+                return Ok(json!({"ok": true, "language": i18n::code()}));
+            }
             "steam_uninstall" => {
-                let bottle_id = arg_str(req, "bottle_id").ok_or("thiếu bottle_id")?;
-                let appid = arg_str(req, "appid").ok_or("thiếu appid")?;
-                let bottle = self.cfg.bottle(&bottle_id).cloned().ok_or("Không tìm thấy môi trường.")?;
-                let app = steam::read_app(&bottle, &appid).ok_or("Steam trong môi trường này không có game đó.")?;
+                let bottle_id = arg_str(req, "bottle_id").ok_or(t!("thiếu bottle_id"))?;
+                let appid = arg_str(req, "appid").ok_or(t!("thiếu appid"))?;
+                let bottle = self.cfg.bottle(&bottle_id).cloned().ok_or(t!("Không tìm thấy môi trường."))?;
+                let app = steam::read_app(&bottle, &appid).ok_or(t!("Steam trong môi trường này không có game đó."))?;
                 // Steam and the game keep files open while they run: wait until everything of this bottle has stopped.
                 let busy = self.running.values().any(|r| r.bottle_id == bottle_id)
                     || !self.stopping.is_empty()
@@ -1170,13 +1172,13 @@ impl Core {
                         !j.phase.finished() && j.bottle_id == bottle_id
                     }).unwrap_or(false);
                 if busy {
-                    return Err("Steam hoặc một game của môi trường này đang chạy. Bấm Dừng rồi gỡ game.".into());
+                    return Err(t!("Steam hoặc một game của môi trường này đang chạy. Bấm Dừng rồi gỡ game.").into());
                 }
                 let key = format!("{bottle_id}/{appid}");
                 if !self.uninstalling.insert(key) {
                     return Ok(json!({"ok": true}));
                 }
-                self.info(format!("Đang gỡ {}…", app.name));
+                self.info(t!("Đang gỡ {}…", app.name));
                 let tx = self.tx.clone();
                 std::thread::spawn(move || {
                     let result = steam::uninstall(&bottle, &app).map(|freed| (app.name.clone(), freed));
@@ -1186,12 +1188,12 @@ impl Core {
             "steam_assist_start" => {
                 let id = id()?;
                 if !self.is_steam_game(&id) {
-                    return Err("Chỉ game chạy qua Steam mới có hộp thoại Steam.".into());
+                    return Err(t!("Chỉ game chạy qua Steam mới có hộp thoại Steam.").into());
                 }
                 if self.running.get(&id).map(|r| r.assist_port.is_some()).unwrap_or(false) {
                     return Ok(json!({"ok": true}));
                 }
-                self.info("Đang mở lại Steam để hiện hộp thoại cho bạn (khoảng 1 phút). Cổng xem chỉ mở trong lần chạy này.");
+                self.info(t!("Đang mở lại Steam để hiện hộp thoại cho bạn (khoảng 1 phút). Cổng xem chỉ mở trong lần chạy này."));
                 if self.running.contains_key(&id) {
                     self.assist_pending.insert(id.clone());
                     self.stop(&id);
@@ -1204,16 +1206,16 @@ impl Core {
             "steam_assist_relaunch" => {
                 // After a dialog was answered Steam may not carry on by itself: ask it again to start the game.
                 let id = id()?;
-                let game = self.cfg.game(&id).cloned().ok_or("Không tìm thấy game.")?;
+                let game = self.cfg.game(&id).cloned().ok_or(t!("Không tìm thấy game."))?;
                 let appid = game
                     .args
                     .split("-applaunch ")
                     .nth(1)
                     .and_then(|r| r.split_whitespace().next())
                     .map(str::to_string)
-                    .ok_or("Game này không phải game Steam có mã.")?;
-                let bottle = self.cfg.bottle(&game.bottle_id).cloned().ok_or("Không tìm thấy môi trường.")?;
-                let rt = self.runtime_for(&bottle).cloned().ok_or("Chưa có động cơ.")?;
+                    .ok_or(t!("Game này không phải game Steam có mã."))?;
+                let bottle = self.cfg.bottle(&game.bottle_id).cloned().ok_or(t!("Không tìm thấy môi trường."))?;
+                let rt = self.runtime_for(&bottle).cloned().ok_or(t!("Chưa có động cơ."))?;
                 let plan = launcher::plan_for_exe(&rt, &bottle, &bottle.steam_exe(), &["-applaunch", &appid]);
                 let mut child = launcher::spawn(&plan, &launcher::log_path("steam-relaunch")).map_err(|e| e.to_string())?;
                 std::thread::spawn(move || {
@@ -1228,31 +1230,31 @@ impl Core {
                 });
                 self.steam_watch.remove(&id);
                 self.steam_blocked.remove(&id);
-                self.info("Đã nhắc Steam mở lại game.");
+                self.info(t!("Đã nhắc Steam mở lại game."));
             }
             "steam_dl_start" => {
                 if self.download.as_ref().map(|d| !d.snapshot().phase.finished()).unwrap_or(false) {
-                    return Err("Đang có một game khác đang tải. Đợi xong hoặc hủy nó trước.".into());
+                    return Err(t!("Đang có một game khác đang tải. Đợi xong hoặc hủy nó trước.").into());
                 }
-                let bottle_id = arg_str(req, "bottle_id").ok_or("thiếu bottle_id")?;
-                let appid = arg_str(req, "appid").ok_or("thiếu appid")?;
+                let bottle_id = arg_str(req, "bottle_id").ok_or(t!("thiếu bottle_id"))?;
+                let appid = arg_str(req, "appid").ok_or(t!("thiếu appid"))?;
                 let account = arg_str(req, "account").unwrap_or_default().trim().to_string();
                 if account.is_empty() || account.contains(char::is_whitespace) {
-                    return Err("Hãy nhập tên tài khoản Steam (tên đăng nhập, không có dấu cách).".into());
+                    return Err(t!("Hãy nhập tên tài khoản Steam (tên đăng nhập, không có dấu cách).").into());
                 }
                 if appid.is_empty() || !appid.chars().all(|c| c.is_ascii_digit()) {
-                    return Err("Mã game không hợp lệ.".into());
+                    return Err(t!("Mã game không hợp lệ.").into());
                 }
-                let bottle = self.cfg.bottle(&bottle_id).cloned().ok_or("Không tìm thấy môi trường.")?;
+                let bottle = self.cfg.bottle(&bottle_id).cloned().ok_or(t!("Không tìm thấy môi trường."))?;
                 if !steam::steamcmd_path().is_file() {
-                    return Err(format!("Chưa có SteamCMD. Cần file: {}", steam::steamcmd_path().display()));
+                    return Err(t!("Chưa có SteamCMD. Cần file: {}", steam::steamcmd_path().display()));
                 }
                 let steamapps = steam::steamapps_dir(&bottle);
                 if !steamapps.is_dir() {
-                    return Err("Môi trường này chưa cài Steam. Vào mục Môi trường để cài Steam trước.".into());
+                    return Err(t!("Môi trường này chưa cài Steam. Vào mục Môi trường để cài Steam trước.").into());
                 }
                 if steam::installed_games(&bottle).iter().any(|a| a.appid == appid) {
-                    return Err("Game này đã có trong Steam của môi trường này.".into());
+                    return Err(t!("Game này đã có trong Steam của môi trường này.").into());
                 }
                 let name = self.lookup.as_ref().filter(|l| l.appid == appid).and_then(|l| l.name.clone());
                 let tmp = paths::downloads_dir().join(format!("steamcmd-{appid}"));
@@ -1273,9 +1275,9 @@ impl Core {
             "steam_dl_input" => {
                 let text = arg_str(req, "text").unwrap_or_default();
                 if text.is_empty() {
-                    return Err("Chưa nhập gì.".into());
+                    return Err(t!("Chưa nhập gì.").into());
                 }
-                let dl = self.download.as_ref().ok_or("Không có game nào đang tải.")?;
+                let dl = self.download.as_ref().ok_or(t!("Không có game nào đang tải."))?;
                 dl.send_input(&text)?;
                 self.download_announced = None;
             }
@@ -1291,19 +1293,19 @@ impl Core {
                 }
             }
             "add_steam_game" => {
-                let bottle_id = arg_str(req, "bottle_id").ok_or("thiếu bottle_id")?;
-                let appid = arg_str(req, "appid").ok_or("thiếu appid")?;
-                let bottle = self.cfg.bottle(&bottle_id).cloned().ok_or("Không tìm thấy môi trường.")?;
+                let bottle_id = arg_str(req, "bottle_id").ok_or(t!("thiếu bottle_id"))?;
+                let appid = arg_str(req, "appid").ok_or(t!("thiếu appid"))?;
+                let bottle = self.cfg.bottle(&bottle_id).cloned().ok_or(t!("Không tìm thấy môi trường."))?;
                 let app = steam::installed_games(&bottle)
                     .into_iter()
                     .find(|a| a.appid == appid)
-                    .ok_or("Steam trong môi trường này chưa có game đó.")?;
+                    .ok_or(t!("Steam trong môi trường này chưa có game đó."))?;
                 if !app.installed {
-                    return Err("Game này chưa tải xong trong Steam. Đợi tải xong rồi thêm.".into());
+                    return Err(t!("Game này chưa tải xong trong Steam. Đợi tải xong rồi thêm.").into());
                 }
                 let marker = format!("-applaunch {appid}");
                 if self.cfg.games.iter().any(|g| g.bottle_id == bottle_id && g.args.contains(&marker)) {
-                    return Err("Game này đã có trong thư viện.".into());
+                    return Err(t!("Game này đã có trong thư viện.").into());
                 }
                 self.cfg.games.push(Game::new(
                     app.name.clone(),
@@ -1313,15 +1315,15 @@ impl Core {
                 ));
                 self.dirty = true;
                 if self.bits_of(&bottle, &appid) == Some(32) {
-                    self.err(format!("Đã thêm {}. Lưu ý: {}.", app.name, steam::BITS32_WARNING));
+                    self.err(t!("Đã thêm {}. Lưu ý: {}.", app.name, steam::bits32_warning()));
                 } else {
-                    self.info(format!("Đã thêm {}. Bấm Chơi: M2WGame sẽ mở Steam (chạy ngầm, mất ~40 giây) rồi mở game.", app.name));
+                    self.info(t!("Đã thêm {}. Bấm Chơi: M2WGame sẽ mở Steam (chạy ngầm, mất ~40 giây) rồi mở game.", app.name));
                 }
             }
             "steam_install" => {
-                let bottle_id = arg_str(req, "bottle_id").ok_or("thiếu bottle_id")?;
-                let appid = arg_str(req, "appid").ok_or("thiếu appid")?;
-                let bottle = self.cfg.bottle(&bottle_id).cloned().ok_or("Không tìm thấy môi trường.")?;
+                let bottle_id = arg_str(req, "bottle_id").ok_or(t!("thiếu bottle_id"))?;
+                let appid = arg_str(req, "appid").ok_or(t!("thiếu appid"))?;
+                let bottle = self.cfg.bottle(&bottle_id).cloned().ok_or(t!("Không tìm thấy môi trường."))?;
                 let script = steam::write_install_script(&bottle, &appid)?;
                 let opened = std::process::Command::new("/usr/bin/open")
                     .args(["-a", "Terminal"])
@@ -1330,15 +1332,15 @@ impl Core {
                     .map(|s| s.success())
                     .unwrap_or(false);
                 if !opened {
-                    return Err(format!("Không mở được Terminal. Bạn có thể tự chạy file: {}", script.display()));
+                    return Err(t!("Không mở được Terminal. Bạn có thể tự chạy file: {}", script.display()));
                 }
-                self.info("Đã mở Terminal. Nhập tài khoản và mật khẩu Steam ở đó (M2WGame không thấy mật khẩu). Tải xong, quay lại bấm Quét lại.");
+                self.info(t!("Đã mở Terminal. Nhập tài khoản và mật khẩu Steam ở đó (M2WGame không thấy mật khẩu). Tải xong, quay lại bấm Quét lại."));
             }
             "dismiss_notice" => self.notice = None,
             "log" => {
                 let id = id()?;
                 let Some(path) = self.last_logs.get(&id).cloned() else {
-                    return Err("Game này chưa được chạy lần nào nên chưa có log.".into());
+                    return Err(t!("Game này chưa được chạy lần nào nên chưa có log.").into());
                 };
                 let failed = matches!(self.exits.get(&id), Some(code) if *code != Some(0));
                 let hints: Vec<Value> = self
@@ -1355,15 +1357,15 @@ impl Core {
             }
             "preview" => {
                 let id = id()?;
-                let game = self.cfg.game(&id).cloned().ok_or("Không tìm thấy game.")?;
+                let game = self.cfg.game(&id).cloned().ok_or(t!("Không tìm thấy game."))?;
                 let bottle = self.cfg.bottle(&game.bottle_id).cloned();
                 let text = match bottle.as_ref().and_then(|b| self.runtime_for(b)) {
                     Some(rt) => launcher::plan(rt, bottle.as_ref().unwrap(), &game).describe(),
-                    None => "(cần có động cơ và môi trường hợp lệ)".to_string(),
+                    None => t!("(cần có động cơ và môi trường hợp lệ)").to_string(),
                 };
                 return Ok(json!({"ok": true, "command": text}));
             }
-            other => return Err(format!("lệnh không hỗ trợ: {other}")),
+            other => return Err(t!("lệnh không hỗ trợ: {}", other)),
         }
         Ok(Value::Null)
     }

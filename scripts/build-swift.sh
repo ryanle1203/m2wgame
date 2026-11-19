@@ -33,6 +33,8 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$OBJ/M2WGame" "$APP/Contents/MacOS/M2WGame"
 [ -f swift/AppIcon.icns ] && cp swift/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
+# Translations: Vietnamese is the source language (the texts in the code), English is in en.lproj.
+[ -d swift/Resources ] && cp -R swift/Resources/*.lproj "$APP/Contents/Resources/"
 
 VERSION="$(grep -m1 '^version' Cargo.toml | cut -d'"' -f2)"
 cat > "$APP/Contents/Info.plist" <<PLIST
@@ -42,6 +44,8 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 <dict>
   <key>CFBundleName</key><string>M2WGame</string>
   <key>CFBundleDisplayName</key><string>M2WGame</string>
+  <key>CFBundleDevelopmentRegion</key><string>vi</string>
+  <key>CFBundleLocalizations</key><array><string>vi</string><string>en</string></array>
   <key>CFBundleIdentifier</key><string>io.github.ryanle1203.m2wgame</string>
   <key>CFBundleExecutable</key><string>M2WGame</string>
   <key>CFBundleIconFile</key><string>AppIcon</string>

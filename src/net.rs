@@ -61,8 +61,8 @@ pub static PROBES: [Probe; 5] = [
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ProbeResult {
     pub id: &'static str,
-    pub label: &'static str,
-    pub why: &'static str,
+    pub label: String,
+    pub why: String,
     pub status: NetStatus,
     pub detail: String,
 }
@@ -73,27 +73,27 @@ pub fn classify(exit: Option<i32>, http: &str) -> (NetStatus, String) {
     let http = http.trim();
     match exit {
         Some(0) if !http.is_empty() && http != "000" => {
-            (NetStatus::Ok, format!("Vào được (HTTP {http})"))
+            (NetStatus::Ok, t!("Vào được (HTTP {})", http))
         }
-        Some(0) => (NetStatus::Failed, "Không nhận được phản hồi".to_string()),
+        Some(0) => (NetStatus::Failed, t!("Không nhận được phản hồi").to_string()),
         // 35 = TLS/recv failure ("connection reset by peer"), 56 = recv failure,
         // 52 = empty reply, 55 = send failure.
         Some(35) | Some(56) | Some(52) | Some(55) => (
             NetStatus::Blocked,
-            "Bị cắt kết nối giữa chừng, có thể mạng đang chặn".to_string(),
+            t!("Bị cắt kết nối giữa chừng, có thể mạng đang chặn").to_string(),
         ),
-        Some(28) => (NetStatus::Slow, "Không phản hồi trong 12 giây".to_string()),
+        Some(28) => (NetStatus::Slow, t!("Không phản hồi trong 12 giây").to_string()),
         Some(6) => (
             NetStatus::NoDns,
-            "Không tìm được địa chỉ máy chủ (lỗi DNS)".to_string(),
+            t!("Không tìm được địa chỉ máy chủ (lỗi DNS)").to_string(),
         ),
-        Some(7) => (NetStatus::Failed, "Không kết nối được".to_string()),
+        Some(7) => (NetStatus::Failed, t!("Không kết nối được").to_string()),
         Some(60) | Some(51) | Some(77) => (
             NetStatus::Failed,
-            "Chứng chỉ bảo mật không hợp lệ, có thể có phần mềm đang can thiệp".to_string(),
+            t!("Chứng chỉ bảo mật không hợp lệ, có thể có phần mềm đang can thiệp").to_string(),
         ),
-        Some(c) => (NetStatus::Failed, format!("Lỗi mạng (mã {c})")),
-        None => (NetStatus::Failed, "Bị ngắt đột ngột".to_string()),
+        Some(c) => (NetStatus::Failed, t!("Lỗi mạng (mã {})", c)),
+        None => (NetStatus::Failed, t!("Bị ngắt đột ngột").to_string()),
     }
 }
 
@@ -105,12 +105,13 @@ pub fn check(probe: &'static Probe) -> ProbeResult {
         .output();
     let (status, detail) = match out {
         Ok(o) => classify(o.status.code(), &String::from_utf8_lossy(&o.stdout)),
-        Err(e) => (NetStatus::Failed, format!("Không chạy được curl: {e}")),
+        Err(e) => (NetStatus::Failed, t!("Không chạy được curl: {}", e)),
     };
     ProbeResult {
         id: probe.id,
-        label: probe.label,
-        why: probe.why,
+        // The probe table keeps Vietnamese source texts; show them in the current language.
+        label: crate::i18n::tr(probe.label),
+        why: crate::i18n::tr(probe.why),
         status,
         detail,
     }
@@ -133,30 +134,30 @@ pub fn advice(results: &[ProbeResult]) -> Vec<(Level, String)> {
     if !ok("steam-store") {
         out.push((
             Level::Bad,
-            "Không vào được cửa hàng Steam. Hãy kiểm tra kết nối Internet.".to_string(),
+            t!("Không vào được cửa hàng Steam. Hãy kiểm tra kết nối Internet.").to_string(),
         ));
     } else if !ok("steam-update") {
         out.push((
             Level::Bad,
-            "Mạng của bạn đang chặn máy chủ cập nhật của Steam (cdn.steamstatic.com). Steam cho Windows sẽ báo lỗi \"needs to be online\". Hãy bật VPN khi cập nhật Steam lần đầu, tải xong có thể tắt.".to_string(),
+            t!("Mạng của bạn đang chặn máy chủ cập nhật của Steam (cdn.steamstatic.com). Steam cho Windows sẽ báo lỗi \"needs to be online\". Hãy bật VPN khi cập nhật Steam lần đầu, tải xong có thể tắt.").to_string(),
         ));
     }
     if ok("steam-store") && !ok("steamcmd") {
         out.push((
             Level::Warn,
-            "Không tải được SteamCMD từ máy chủ của Valve. Thử lại sau hoặc bật VPN.".to_string(),
+            t!("Không tải được SteamCMD từ máy chủ của Valve. Thử lại sau hoặc bật VPN.").to_string(),
         ));
     }
     if !ok("github") {
         out.push((
             Level::Warn,
-            "Không vào được GitHub nên khó tải động cơ chạy game. Bạn có thể tải tay bằng trình duyệt (có thể cần VPN).".to_string(),
+            t!("Không vào được GitHub nên khó tải động cơ chạy game. Bạn có thể tải tay bằng trình duyệt (có thể cần VPN).").to_string(),
         ));
     }
     if out.is_empty() {
         out.push((
             Level::Ok,
-            "Mạng ổn: không có máy chủ cần thiết nào bị chặn.".to_string(),
+            t!("Mạng ổn: không có máy chủ cần thiết nào bị chặn.").to_string(),
         ));
     }
     out
@@ -169,8 +170,8 @@ mod tests {
     fn result(id: &'static str, status: NetStatus) -> ProbeResult {
         ProbeResult {
             id,
-            label: "x",
-            why: "y",
+            label: "x".into(),
+            why: "y".into(),
             status,
             detail: String::new(),
         }

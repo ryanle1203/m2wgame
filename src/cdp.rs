@@ -14,7 +14,7 @@ pub const PAGE_H: f64 = 800.0;
 
 fn connect(port: u16) -> Result<TcpStream, String> {
     let s = TcpStream::connect_timeout(&format!("127.0.0.1:{port}").parse().unwrap(), TIMEOUT)
-        .map_err(|_| "Không nối được cổng xem Steam (Steam chưa mở hoặc đã đóng).".to_string())?;
+        .map_err(|_| t!("Không nối được cổng xem Steam (Steam chưa mở hoặc đã đóng).").to_string())?;
     s.set_read_timeout(Some(TIMEOUT)).ok();
     s.set_write_timeout(Some(TIMEOUT)).ok();
     Ok(s)
@@ -25,11 +25,11 @@ fn read_until_headers_end(s: &mut TcpStream) -> Result<(String, Vec<u8>), String
     let mut byte = [0u8; 1];
     while !buf.ends_with(b"\r\n\r\n") {
         match s.read(&mut byte) {
-            Ok(0) | Err(_) => return Err("Steam không trả lời.".into()),
+            Ok(0) | Err(_) => return Err(t!("Steam không trả lời.").into()),
             Ok(_) => buf.push(byte[0]),
         }
         if buf.len() > 16 * 1024 {
-            return Err("Phản hồi lạ từ cổng Steam.".into());
+            return Err(t!("Phản hồi lạ từ cổng Steam.").into());
         }
     }
     Ok((String::from_utf8_lossy(&buf).into_owned(), Vec::new()))
@@ -55,10 +55,10 @@ pub fn pages(port: u16) -> Result<Vec<Page>, String> {
             let (k, v) = l.split_once(':')?;
             k.eq_ignore_ascii_case("content-length").then(|| v.trim().parse().ok())?
         })
-        .ok_or("Phản hồi lạ từ cổng Steam.")?;
+        .ok_or(t!("Phản hồi lạ từ cổng Steam."))?;
     let mut body = vec![0u8; len];
-    s.read_exact(&mut body).map_err(|_| "Steam trả lời thiếu dữ liệu.".to_string())?;
-    let v: Value = serde_json::from_slice(&body).map_err(|_| "Không đọc được danh sách trang của Steam.".to_string())?;
+    s.read_exact(&mut body).map_err(|_| t!("Steam trả lời thiếu dữ liệu.").to_string())?;
+    let v: Value = serde_json::from_slice(&body).map_err(|_| t!("Không đọc được danh sách trang của Steam.").to_string())?;
     Ok(v.as_array()
         .map(|a| {
             a.iter()
@@ -77,7 +77,7 @@ pub fn main_page(port: u16) -> Result<Page, String> {
     pages(port)?
         .into_iter()
         .find(|p| p.url.contains("createflags=274") && !p.ws.is_empty())
-        .ok_or_else(|| "Chưa thấy cửa sổ chính của Steam, đợi vài giây rồi thử lại.".to_string())
+        .ok_or_else(|| t!("Chưa thấy cửa sổ chính của Steam, đợi vài giây rồi thử lại.").to_string())
 }
 
 pub struct Ws {
@@ -90,7 +90,7 @@ impl Ws {
         let path = ws_url
             .strip_prefix("ws://")
             .and_then(|r| r.find('/').map(|i| r[i..].to_string()))
-            .ok_or("Địa chỉ websocket lạ.")?;
+            .ok_or(t!("Địa chỉ websocket lạ."))?;
         let mut s = connect(port)?;
         let req = format!(
             "GET {path} HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n\r\n"
@@ -98,7 +98,7 @@ impl Ws {
         s.write_all(req.as_bytes()).map_err(|e| e.to_string())?;
         let (head, _) = read_until_headers_end(&mut s)?;
         if !head.starts_with("HTTP/1.1 101") {
-            return Err("Steam từ chối kết nối xem giao diện.".into());
+            return Err(t!("Steam từ chối kết nối xem giao diện.").into());
         }
         Ok(Ws { s, next_id: 1 })
     }
@@ -120,12 +120,12 @@ impl Ws {
         }
         frame.extend_from_slice(&mask);
         frame.extend(payload.iter().enumerate().map(|(i, b)| b ^ mask[i % 4]));
-        self.s.write_all(&frame).map_err(|e| format!("Không gửi được cho Steam: {e}"))
+        self.s.write_all(&frame).map_err(|e| t!("Không gửi được cho Steam: {}", e))
     }
 
     fn read_exact(&mut self, n: usize) -> Result<Vec<u8>, String> {
         let mut out = vec![0u8; n];
-        self.s.read_exact(&mut out).map_err(|_| "Steam không trả lời kịp.".to_string())?;
+        self.s.read_exact(&mut out).map_err(|_| t!("Steam không trả lời kịp.").to_string())?;
         Ok(out)
     }
 
@@ -149,7 +149,7 @@ impl Ws {
                 n => n as usize,
             };
             if len > 64 * 1024 * 1024 {
-                return Err("Phản hồi quá lớn từ Steam.".into());
+                return Err(t!("Phản hồi quá lớn từ Steam.").into());
             }
             let mask = if masked { Some(self.read_exact(4)?) } else { None };
             let mut payload = self.read_exact(len)?;
@@ -165,7 +165,7 @@ impl Ws {
                         return Ok(String::from_utf8_lossy(&message).into_owned());
                     }
                 }
-                0x8 => return Err("Steam đã đóng kết nối.".into()),
+                0x8 => return Err(t!("Steam đã đóng kết nối.").into()),
                 _ => {} // ping / pong / binary: ignore
             }
         }
@@ -180,12 +180,12 @@ impl Ws {
             let v: Value = serde_json::from_str(&msg).unwrap_or(Value::Null);
             if v["id"] == id {
                 if let Some(err) = v.get("error") {
-                    return Err(format!("Steam báo lỗi: {}", err["message"].as_str().unwrap_or("?")));
+                    return Err(t!("Steam báo lỗi: {}", err["message"].as_str().unwrap_or("?")));
                 }
                 return Ok(v["result"].clone());
             }
         }
-        Err("Steam không trả lời yêu cầu.".into())
+        Err(t!("Steam không trả lời yêu cầu.").into())
     }
 }
 
@@ -196,7 +196,7 @@ pub fn screenshot(port: u16) -> Result<String, String> {
     let page = main_page(port)?;
     let mut ws = Ws::connect(port, &page.ws)?;
     let r = ws.call("Page.captureScreenshot", json!({"format": "jpeg", "quality": 72}))?;
-    r["data"].as_str().map(str::to_string).ok_or_else(|| "Steam không trả ảnh.".into())
+    r["data"].as_str().map(str::to_string).ok_or_else(|| t!("Steam không trả ảnh.").into())
 }
 
 fn mouse(ws: &mut Ws, kind: &str, x: f64, y: f64, extra: Value) -> Result<(), String> {
@@ -212,7 +212,7 @@ fn mouse(ws: &mut Ws, kind: &str, x: f64, y: f64, extra: Value) -> Result<(), St
 /// One left click at page coordinates (0..1280, 0..800).
 pub fn click(port: u16, x: f64, y: f64) -> Result<(), String> {
     if !(0.0..=PAGE_W).contains(&x) || !(0.0..=PAGE_H).contains(&y) {
-        return Err("Vị trí bấm nằm ngoài cửa sổ Steam.".into());
+        return Err(t!("Vị trí bấm nằm ngoài cửa sổ Steam.").into());
     }
     let page = main_page(port)?;
     let mut ws = Ws::connect(port, &page.ws)?;

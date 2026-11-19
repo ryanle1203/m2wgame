@@ -1,0 +1,206 @@
+/* M2WGame — English texts of the interface.
+   The key is the Vietnamese text used in the Swift code (Vietnamese is the source language);
+   a text with no entry here is shown as written. %@ and %lld are filled in by the app.
+   `scripts/check-swift-strings.py` checks that every Vietnamese text in the code has an entry. */
+
+/* App.swift */
+"Thêm game…" = "Add Game…";
+"Đi tới" = "Go";
+"%lld game đang chạy" = "%lld game(s) running";
+"Tải game: cần mật khẩu" = "Download: password needed";
+"Tải game: cần mã Steam Guard" = "Download: Steam Guard code needed";
+"Tải game: chờ duyệt trên điện thoại" = "Download: approve on your phone";
+"Đang tải game %lld%%" = "Downloading game %lld%%";
+"Đang chuẩn bị tải game…" = "Preparing the download…";
+"Đóng" = "Close";
+"Ngôn ngữ" = "Language";
+
+/* Components.swift */
+"Tốt" = "Good";
+"Lưu ý" = "Note";
+"Cần sửa" = "Needs fixing";
+"Hủy" = "Cancel";
+"Tên" = "Name";
+
+/* Core.swift */
+"Thư viện" = "Library";
+"Môi trường" = "Environments";
+"Động cơ" = "Engines";
+"Hệ thống" = "System";
+"Không nói chuyện được với lõi của ứng dụng." = "Cannot talk to the app's core.";
+"Có lỗi xảy ra." = "Something went wrong.";
+"Đang có game đang chạy" = "A game is running";
+"%@. Nếu thoát mà không dừng, game vẫn chạy nhưng M2WGame sẽ không còn điều khiển được nó." = "%@. If you quit without stopping it, the game keeps running but M2WGame can no longer control it.";
+"Dừng game rồi thoát" = "Stop the game and quit";
+"Thoát, để game chạy tiếp" = "Quit, keep the game running";
+
+/* EnginesView.swift */
+"Chưa có động cơ" = "No engines yet";
+"Cần một bản Wine để chạy game Windows. Tải bản Gcenx (Game Porting Toolkit hoặc Wine Staging), giải nén vào thư mục Runtimes, rồi bấm Quét lại." = "You need a build of Wine to run Windows games. Download a Gcenx build (Game Porting Toolkit or Wine Staging), unpack it into the Runtimes folder, then click Rescan.";
+"Mở thư mục Runtimes" = "Open the Runtimes folder";
+"Quét lại" = "Rescan";
+"Động cơ là phần mềm dịch lệnh Windows sang Mac. Game cũ thường hợp Wine Staging; game cần DirectX 12 nên thử bản Game Porting Toolkit (có D3DMetal)." = "An engine is the software that translates Windows commands for the Mac. Older games usually suit Wine Staging; games that need DirectX 12 should try the Game Porting Toolkit build (it has D3DMetal).";
+"Đã cài" = "Installed";
+"Quét lại thư mục động cơ" = "Rescan the engines folder";
+"Thêm động cơ" = "Add engine";
+"Chọn file wine64 có sẵn trên máy" = "Pick a wine64 file already on this Mac";
+"Chọn file wine64 (hoặc wine) trong thư mục bin của động cơ" = "Pick the wine64 (or wine) file in the engine's bin folder";
+"Bản cũ" = "Old";
+"Mặc định" = "Default";
+"đang đọc phiên bản…" = "reading the version…";
+"Dùng làm mặc định" = "Make default";
+
+/* EnvironmentsView.swift */
+"Môi trường là một \"ổ C ảo\" riêng cho Windows. Mỗi môi trường có Steam, game và cài đặt riêng, nên game này không làm hỏng game kia." = "An environment is a separate \"virtual C: drive\" for Windows. Each environment has its own Steam, games and settings, so one game cannot break another.";
+"Tạo môi trường" = "Create environment";
+"Môi trường mới" = "New environment";
+"Đặt tên dễ nhớ, ví dụ \"Steam Wine mới\"." = "Pick an easy-to-remember name, for example \"New Steam Wine\".";
+"Tạo" = "Create";
+"Đổi tên môi trường" = "Rename environment";
+"Lưu" = "Save";
+"Xóa môi trường %@?" = "Delete the environment %@?";
+"Xóa vĩnh viễn" = "Delete permanently";
+"Toàn bộ thư mục của môi trường này (Windows ảo, Steam, game đã tải bên trong) sẽ bị xóa khỏi máy và không khôi phục được." = "This environment's whole folder (virtual Windows, Steam, the games downloaded inside) will be deleted from this Mac and cannot be recovered.";
+"chưa có" = "none yet";
+"Trạng thái" = "Status";
+"Mặc định (%@)" = "Default (%@)";
+"Động cơ đã bị gỡ" = "Engine was removed";
+"Động cơ này khá cũ (Wine 7). Steam cho Windows có thể bị treo; dùng Wine Staging 11 cho Steam." = "This engine is quite old (Wine 7). Windows Steam may freeze; use Wine Staging 11 for Steam.";
+"Thư mục" = "Folder";
+"Hiện" = "Show";
+"%lld game dùng môi trường này" = "%lld game(s) use this environment";
+"Đổi tên…" = "Rename…";
+"Xóa…" = "Delete…";
+"Đang khởi tạo (vài phút)…" = "Setting up (a few minutes)…";
+"Sẵn sàng" = "Ready";
+"Chưa khởi tạo" = "Not set up";
+"Khởi tạo ngay" = "Set up now";
+"Đang cài Steam…" = "Installing Steam…";
+"· đã có trong thư viện" = "· already in the library";
+"Thêm vào thư viện" = "Add to library";
+"Chưa cài" = "Not installed";
+"Cài Steam…" = "Install Steam…";
+
+/* LibraryView.swift */
+"Đang đọc thông tin máy…" = "Reading this Mac's information…";
+"Chưa có game nào" = "No games yet";
+"Thêm game có sẵn trong Steam, tải game mới bằng link Steam, hoặc chọn file .exe. Cần cài Steam cho Windows trước ở mục Môi trường." = "Add a game that is already in Steam, download a new one with a Steam link, or pick an .exe file. Install Windows Steam first in Environments.";
+"Thêm game" = "Add game";
+"Thêm game (⌘N)" = "Add game (⌘N)";
+"Gỡ %@ khỏi máy?" = "Uninstall %@ from this Mac?";
+"Gỡ khỏi máy" = "Uninstall";
+"Xóa vĩnh viễn file game%@ khỏi máy để lấy lại dung lượng, và bỏ game khỏi thư viện. File lưu game (save) không bị xóa. Muốn chơi lại phải tải lại toàn bộ. Không hoàn tác được." = "This permanently deletes the game's files%@ from this Mac to free up space, and removes the game from the library. Save files are not deleted. To play again you must download everything again. This cannot be undone.";
+"Xóa %@ khỏi thư viện?" = "Remove %@ from the library?";
+"Xóa khỏi thư viện" = "Remove from library";
+"File game trên máy vẫn còn nguyên, chỉ bỏ nó khỏi danh sách này." = "The game's files on this Mac stay untouched; it is only removed from this list.";
+"Chưa mở được: %@." = "Cannot open yet: %@.";
+"Xem hộp thoại Steam" = "View Steam dialog";
+"Mở hộp thoại Steam" = "Open Steam dialog";
+"Cổng xem Steam đang mở (chỉ trong lần chạy này)" = "Steam viewer is open (this run only)";
+"Không tìm thấy file game" = "Game file not found";
+"Game 32-bit: trên Mac chip Apple thường không chạy được (hay sập ngay lúc mở). Cân nhắc CrossOver hoặc chọn game 64-bit." = "32-bit game: it usually does not run on Apple silicon Macs (it tends to crash right at launch). Consider CrossOver, or pick a 64-bit game.";
+"Xem log" = "View log";
+"Cài đặt game" = "Game settings";
+"Cài đặt…" = "Settings…";
+"Xem hộp thoại Steam…" = "View Steam dialog…";
+"Gỡ game khỏi máy…" = "Uninstall game…";
+"Xóa khỏi thư viện…" = "Remove from library…";
+"Môi trường đã bị xóa" = "Environment was deleted";
+"Đang chạy · %@" = "Running · %@";
+"Đang gỡ…" = "Uninstalling…";
+"Đang dừng…" = "Stopping…";
+"Đang chuẩn bị…" = "Preparing…";
+"Chơi" = "Play";
+"Dừng" = "Stop";
+"Từ Steam" = "From Steam";
+"Từ file .exe" = "From an .exe file";
+"Cách thêm" = "How to add";
+"Chưa có môi trường nào cài Steam. Vào mục Môi trường, chọn Cài Steam." = "No environment has Steam installed. Go to Environments and choose Install Steam.";
+"Game đã có trong Steam của máy" = "Games already in this Mac's Steam";
+"Không có game mới. Game đã thêm vào thư viện thì không hiện ở đây." = "No new games. Games already added to the library are not shown here.";
+"Thường không chạy được trên Mac chip Apple" = "Usually does not run on Apple silicon Macs";
+"Gỡ…" = "Uninstall…";
+"Thêm" = "Add";
+"Chưa tải xong" = "Download not finished";
+"Đang tải game" = "Downloading game";
+"Dán link trang game trên Steam" = "Paste the game's Steam page link";
+"Tìm" = "Search";
+"Cài game mới" = "Install a new game";
+"Mở trang game trên steampowered.com, sao chép đường dẫn rồi dán vào đây. M2WGame tải game bằng SteamCMD ngay trong cửa sổ này. Mật khẩu chỉ được gửi cho SteamCMD, không được lưu lại." = "Open the game's page on steampowered.com, copy the link and paste it here. M2WGame downloads the game with SteamCMD right in this window. Your password is only sent to SteamCMD and is never stored.";
+"Xóa vĩnh viễn file game (%@) khỏi máy để lấy lại dung lượng. File lưu game (save) không bị xóa. Muốn chơi lại phải tải lại toàn bộ. Không hoàn tác được." = "This permanently deletes the game's files (%@) from this Mac to free up space. Save files are not deleted. To play again you must download everything again. This cannot be undone.";
+"Xong" = "Done";
+"Đang tìm…" = "Searching…";
+"Mã %@" = "ID %@";
+"Game này không có bản Windows nên không chạy được ở đây." = "This game has no Windows version, so it cannot run here.";
+"Cài vào môi trường" = "Install into environment";
+"Chưa có SteamCMD trong thư mục dữ liệu của M2WGame nên chưa tải được." = "SteamCMD is not in M2WGame's data folder yet, so downloading is not possible.";
+"Tài khoản Steam (tên đăng nhập)" = "Steam account (username)";
+"Dùng Terminal thay thế" = "Use Terminal instead";
+"Tải về" = "Download";
+"Game %@" = "Game %@";
+"Mật khẩu Steam" = "Steam password";
+"Gửi" = "Send";
+"Mã Steam Guard" = "Steam Guard code";
+"Chi tiết" = "Details";
+"Hủy tải" = "Cancel download";
+"Tên game" = "Game name";
+"File chạy (.exe)" = "Program file (.exe)";
+"Chưa chọn" = "Not chosen";
+"Chọn…" = "Choose…";
+"Chọn file .exe của game" = "Choose the game's .exe file";
+"Tham số thêm (không bắt buộc)" = "Extra arguments (optional)";
+"Dành cho file .exe riêng lẻ. Cách này chưa được kiểm thử kỹ: M2WGame hiện tập trung vào game Windows mua trên Steam, nên hãy thêm game Steam ở tab Từ Steam." = "For a standalone .exe file. This route is not well tested: M2WGame currently focuses on Windows games bought on Steam, so add Steam games in the From Steam tab.";
+"Cài đặt: %@" = "Settings: %@";
+"Game đang chạy: thay đổi chỉ áp dụng khi bạn Dừng rồi Chơi lại." = "The game is running: changes only apply after you Stop and Play again.";
+"Thông tin" = "Info";
+"File game" = "Game file";
+"Hiện số khung hình mỗi giây (FPS)" = "Show frames per second (FPS)";
+"Hiện một bảng nhỏ ở góc màn hình khi chơi, để biết game có mượt không. Cần Dừng rồi Chơi lại mới có hiệu lực." = "Shows a small overlay in the screen corner while playing, so you can tell whether the game runs smoothly. Needs Stop and Play again to take effect.";
+"Hiển thị" = "Display";
+"Mở hộp thoại Steam…" = "Open Steam dialog…";
+"Gỡ game khỏi máy…%@" = "Uninstall game…%@";
+" (giải phóng %@)" = " (frees %@)";
+"Dùng \"Mở hộp thoại Steam\" khi game không mở được vì Steam đang hỏi điều gì đó (điều khoản, đồng bộ đám mây): M2WGame hiện câu hỏi đó để bạn tự trả lời. Chỉ có hiệu lực trong lần chạy này." = "Use \"Open Steam dialog\" when the game will not open because Steam is asking something (terms, cloud sync): M2WGame shows that question so you can answer it yourself. Only valid for this run.";
+"Nâng cao (chỉ dùng khi game không chạy được)" = "Advanced (only when the game will not run)";
+"Bình thường bạn không cần đổi gì ở đây." = "Normally you do not need to change anything here.";
+"Chạy mượt hơn (nên để bật)" = "Run smoother (best left on)";
+"Chỉ tắt nếu game bị lỗi lạ." = "Turn off only if the game shows strange errors.";
+"Chế độ tương thích cũ" = "Legacy compatibility mode";
+"Chỉ thử bật khi game lỗi dù mục trên đã bật." = "Try turning it on only if the game fails even with the option above on.";
+"Giả lập tính năng AVX của máy (nên để bật)" = "Emulate this Mac's AVX feature (best left on)";
+"Một số game cần mới mở được. Cần macOS 15 trở lên." = "Some games need it to open. Needs macOS 15 or later.";
+"Ghi nhật ký chi tiết" = "Detailed logging";
+"Giúp tìm nguyên nhân khi game không mở. Nhật ký dài hơn, đọc bằng nút Log." = "Helps find the cause when a game will not open. The log gets longer; read it with the Log button.";
+"Cách mở game này do M2WGame tự quản lý (qua Steam), bạn không cần chỉnh." = "How this game is launched is managed by M2WGame (through Steam); you do not need to change it.";
+"Tham số thêm" = "Extra arguments";
+"Chữ gửi thêm cho game khi mở, ví dụ -windowed. Để trống nếu không biết." = "Extra text passed to the game when it opens, for example -windowed. Leave empty if unsure.";
+"Biến môi trường (dành cho người rành kỹ thuật)" = "Environment variables (for technical users)";
+"Mỗi dòng một biến, dạng TÊN=giá trị." = "One variable per line, as NAME=value.";
+"Lệnh sẽ chạy (theo cài đặt đã lưu)" = "Command that will run (from the saved settings)";
+"Đang đọc…" = "Reading…";
+"Tải lại" = "Reload";
+"Hiện trong Finder" = "Show in Finder";
+"Gợi ý" = "Hints";
+"(log trống)" = "(log is empty)";
+
+/* SteamDialog.swift */
+"Hộp thoại của Steam: %@" = "Steam dialog: %@";
+"Đang mở lại Steam…" = "Reopening Steam…";
+"Đang chờ Steam mở…" = "Waiting for Steam to open…";
+"Bấm trực tiếp lên hình, như trên cửa sổ Steam thật." = "Click directly on the picture, as in the real Steam window.";
+"Cuộn lên" = "Scroll up";
+"Cuộn xuống" = "Scroll down";
+"Gõ chữ vào ô đang chọn" = "Type into the selected field";
+"Mở lại game" = "Relaunch game";
+"Dùng nếu sau khi bạn trả lời, Steam không tự mở game" = "Use this if Steam does not open the game by itself after you answered";
+
+/* SystemView.swift */
+"Máy đã sẵn sàng chạy game" = "This Mac is ready to run games";
+"Còn thiếu vài thứ" = "A few things are missing";
+"Các mục bên dưới đều ổn." = "Everything below looks fine.";
+"Xem các mục có dấu cảnh báo bên dưới." = "See the items with a warning sign below.";
+"Máy của bạn" = "Your Mac";
+"Kiểm tra xem máy có vào được các máy chủ Steam và GitHub không. Hữu ích khi Steam báo \"cần trực tuyến\" dù Internet vẫn chạy." = "Checks whether this Mac can reach the Steam and GitHub servers. Useful when Steam says \"must be online\" although the Internet works.";
+"Kiểm tra mạng" = "Check network";
+"Kiểm tra lại" = "Check again";
+"Mạng" = "Network";

@@ -156,7 +156,7 @@ pub fn detect_all(extra_wine_bins: &[PathBuf]) -> Vec<Runtime> {
     dirs.push(("Wine (Homebrew)".into(), PathBuf::from("/opt/homebrew/bin")));
     dirs.push(("Wine (Homebrew Intel)".into(), PathBuf::from("/usr/local/bin")));
     dirs.push((
-        "Wine từ Whisky".into(),
+        t!("Wine từ Whisky").into(),
         paths::home().join("Library/Application Support/com.isaacmarovitz.Whisky/Libraries/Wine/bin"),
     ));
     dirs.extend(own_runtimes());
@@ -184,7 +184,7 @@ pub fn detect_all(extra_wine_bins: &[PathBuf]) -> Vec<Runtime> {
             .and_then(|p| p.parent())
             .and_then(|p| p.file_name())
             .map(|n| n.to_string_lossy().into_owned())
-            .unwrap_or_else(|| "Wine (tự chọn)".into());
+            .unwrap_or_else(|| t!("Wine (tự chọn)").into());
         if let Some(rt) = Runtime::from_bin(name, bin.clone()) {
             push(rt);
         }

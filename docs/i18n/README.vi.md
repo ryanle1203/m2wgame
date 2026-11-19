@@ -9,8 +9,8 @@ giải thích lỗi bằng lời thường thay vì để bạn đọc một đ�
 > **Trạng thái: bản thử nghiệm sớm.** Có game chạy được, có game không. Hãy đọc phần
 
 > **Phạm vi:** M2WGame tập trung giải quyết một vấn đề: chạy **game Windows mua trên Steam**. Các nhà cung cấp và cửa hàng khác (Epic, GOG, EA, Ubisoft, Battle.net, itch.io…) chưa được hỗ trợ. Bạn vẫn có thể thêm thủ công một file `.exe` riêng lẻ, nhưng cách này chưa được kiểm thử.
-> [Giới hạn](#giới-hạn) trước khi mất công với một game. Giao diện hiện chỉ có **tiếng Việt**;
-> bản dịch sang ngôn ngữ khác rất được hoan nghênh. Bản chuẩn bằng tiếng Anh: [README.md](../../README.md).
+> [Giới hạn](#giới-hạn) trước khi mất công với một game. Giao diện có **tiếng Việt và tiếng Anh** (đổi ở thanh bên);
+> các ngôn ngữ khác rất được hoan nghênh. Bản chuẩn bằng tiếng Anh: [README.md](../../README.md).
 
 M2WGame **không liên kết với** Apple, Valve, CodeWeavers hay dự án Wine. Nó không kèm theo,
 không tải lậu và không vượt qua bảo vệ bản quyền nào: bạn cần sở hữu game hợp pháp.

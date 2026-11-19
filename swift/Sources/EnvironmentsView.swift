@@ -22,7 +22,7 @@ struct EnvironmentsView: View {
             }
         }
         .formStyle(.grouped)
-        .navigationTitle("Môi trường")
+        .navigationTitle(L("Môi trường"))
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
@@ -66,7 +66,7 @@ struct BottleSection: View {
     private var runtimes: [RuntimeItem] { store.snap?.runtimes ?? [] }
 
     private var defaultRuntimeName: String {
-        runtimes.first(where: \.active)?.name ?? "chưa có"
+        runtimes.first(where: \.active)?.name ?? L("chưa có")
     }
 
     var body: some View {

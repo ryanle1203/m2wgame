@@ -10,8 +10,8 @@ and it explains problems in plain language instead of leaving you with a wall of
 
 > **Status: early alpha.** It works for some games (it was built around getting a 64-bit Unity
 > game running at 60 FPS on an M1 Pro) and not for others. Read [Limitations](#limitations)
-> before you spend time on a game. The app's interface is currently **Vietnamese only**;
-> translations are welcome (see [CONTRIBUTING](CONTRIBUTING.md)). The English README is the
+> before you spend time on a game. The app's interface is available in **English and Vietnamese** (switch it in the
+> sidebar); more languages are welcome (see [CONTRIBUTING](CONTRIBUTING.md)). The English README is the
 > reference; translated READMEs live in [docs/i18n](docs/i18n) and may lag behind.
 
 > **Scope:** M2WGame focuses on one problem: running **Windows games you bought on Steam**. Other stores and launchers (Epic, GOG, EA, Ubisoft, Battle.net, itch.io…) are not supported yet. You can add a standalone `.exe` by hand, but that path is untested.
@@ -31,7 +31,7 @@ include, download or bypass any game, DRM or licence check: you need to own your
 </p>
 
 *Library (a 32-bit game gets a warning), environments, engines, system check. The screenshots
-use demo data with invented games, and the interface is currently Vietnamese.*
+use demo data with invented games and show the Vietnamese interface; the app also speaks English.*
 
 ## What it does
 

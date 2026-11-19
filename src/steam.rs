@@ -121,24 +121,24 @@ pub fn read_app(bottle: &Bottle, appid: &str) -> Option<SteamApp> {
 pub fn uninstall(bottle: &Bottle, app: &SteamApp) -> Result<u64, String> {
     let dir_name = app.installdir.as_str();
     if dir_name.is_empty() || dir_name == "." || dir_name == ".." || dir_name.contains('/') || dir_name.contains('\\') {
-        return Err("Tên thư mục của game không hợp lệ, đã hủy để an toàn.".into());
+        return Err(t!("Tên thư mục của game không hợp lệ, đã hủy để an toàn.").into());
     }
     let steamapps = steamapps_dir(bottle);
     let common = steamapps.join("common");
     let dir = common.join(dir_name);
     // Belt and braces: whatever happens, never delete outside this bottle's own library folder.
     if !dir.starts_with(&common) || dir == common || !common.starts_with(bottle.path()) {
-        return Err("Đường dẫn game nằm ngoài thư viện Steam của môi trường, đã hủy để an toàn.".into());
+        return Err(t!("Đường dẫn game nằm ngoài thư viện Steam của môi trường, đã hủy để an toàn.").into());
     }
     if dir.is_symlink() {
-        return Err("Thư mục game là một liên kết (symlink), đã hủy để an toàn.".into());
+        return Err(t!("Thư mục game là một liên kết (symlink), đã hủy để an toàn.").into());
     }
     if dir.exists() {
-        std::fs::remove_dir_all(&dir).map_err(|e| format!("Không xóa được thư mục game: {e}"))?;
+        std::fs::remove_dir_all(&dir).map_err(|e| t!("Không xóa được thư mục game: {}", e))?;
     }
     let manifest = steamapps.join(format!("appmanifest_{}.acf", app.appid));
     if manifest.is_file() {
-        std::fs::remove_file(&manifest).map_err(|e| format!("Không xóa được file xác nhận: {e}"))?;
+        std::fs::remove_file(&manifest).map_err(|e| t!("Không xóa được file xác nhận: {}", e))?;
     }
     let shaders = steamapps.join("shadercache").join(&app.appid);
     if shaders.is_dir() && !shaders.is_symlink() {
@@ -164,20 +164,20 @@ pub fn lookup(appid: &str) -> Result<(String, bool), String> {
     let out = Command::new("/usr/bin/curl")
         .args(["-sfL", "--max-time", "20", &url])
         .output()
-        .map_err(|e| format!("Không chạy được curl: {e}"))?;
+        .map_err(|e| t!("Không chạy được curl: {}", e))?;
     if !out.status.success() {
-        return Err("Không vào được cửa hàng Steam. Kiểm tra mạng (mục Hệ thống).".into());
+        return Err(t!("Không vào được cửa hàng Steam. Kiểm tra mạng (mục Hệ thống).").into());
     }
     let v: serde_json::Value = serde_json::from_slice(&out.stdout)
-        .map_err(|_| "Steam trả về dữ liệu lạ, thử lại sau.".to_string())?;
+        .map_err(|_| t!("Steam trả về dữ liệu lạ, thử lại sau.").to_string())?;
     let entry = &v[appid];
     if entry["success"] != true {
-        return Err("Không tìm thấy game có mã này trên cửa hàng Steam.".into());
+        return Err(t!("Không tìm thấy game có mã này trên cửa hàng Steam.").into());
     }
     let name = entry["data"]["name"].as_str().unwrap_or("").to_string();
     let windows = entry["data"]["platforms"]["windows"].as_bool().unwrap_or(true);
     if name.is_empty() {
-        return Err("Không đọc được tên game.".into());
+        return Err(t!("Không đọc được tên game.").into());
     }
     Ok((name, windows))
 }
@@ -196,6 +196,17 @@ fn sh_quote(p: &Path) -> String {
 pub fn install_script(bottle: &Bottle, appid: &str, steamcmd: &Path) -> String {
     let steamapps = steamapps_dir(bottle);
     let tmp = paths::downloads_dir().join(format!("steamcmd-{appid}"));
+    // The messages the script prints (shell variables inside them are expanded by bash).
+    let m_no_steamcmd = t!("Chưa có SteamCMD tại: $STEAMCMD");
+    let m_enter = t!("Nhấn Enter để đóng...");
+    let m_no_steam = t!("Môi trường này chưa cài Steam (không thấy $STEAMAPPS).");
+    let m_intro = t!("Tải game {}. SteamCMD sẽ hỏi mật khẩu và mã Steam Guard: hãy nhập tại đây.", appid);
+    let m_tip = t!("Mẹo: tắt VPN khi đăng nhập, và duyệt yêu cầu trên điện thoại bằng 'Steam Client'.");
+    let m_account = t!("Tên tài khoản Steam: ");
+    let m_incomplete = t!("Tải chưa xong hoặc bị lỗi (không thấy file xác nhận). Các file đã tải vẫn ở: $TMP");
+    let m_cannot_file = t!("Không thể xếp game vào thư viện (thiếu tên thư mục hoặc đã có sẵn): $STEAMAPPS/common/$DIR");
+    let m_kept = t!("Game đã tải vẫn ở: $TMP");
+    let m_done = t!("Xong. Quay lại M2WGame, bấm Quét lại trong tab Từ Steam để thêm game.");
     format!(
         r#"#!/bin/bash
 # M2WGame: download Steam game {appid} (Windows version) into the Steam library of "{bottle_name}".
@@ -206,45 +217,55 @@ TMP={tmp}
 APPID={appid}
 
 if [ ! -x "$STEAMCMD" ]; then
-  echo "Chưa có SteamCMD tại: $STEAMCMD"
-  read -r -p "Nhấn Enter để đóng..." _; exit 1
+  echo "{m_no_steamcmd}"
+  read -r -p "{m_enter}" _; exit 1
 fi
 if [ ! -d "$STEAMAPPS" ]; then
-  echo "Môi trường này chưa cài Steam (không thấy $STEAMAPPS)."
-  read -r -p "Nhấn Enter để đóng..." _; exit 1
+  echo "{m_no_steam}"
+  read -r -p "{m_enter}" _; exit 1
 fi
 
-echo "Tải game {appid}. SteamCMD sẽ hỏi mật khẩu và mã Steam Guard: hãy nhập tại đây."
-echo "Mẹo: tắt VPN khi đăng nhập, và duyệt yêu cầu trên điện thoại bằng \"Steam Client\"."
-read -r -p "Tên tài khoản Steam: " ACCOUNT
+echo "{m_intro}"
+echo "{m_tip}"
+read -r -p "{m_account}" ACCOUNT
 [ -z "$ACCOUNT" ] && exit 1
 mkdir -p "$TMP"
 "$STEAMCMD" +@sSteamCmdForcePlatformType windows +force_install_dir "$TMP" +login "$ACCOUNT" +app_update "$APPID" validate +quit
 
 ACF="$TMP/steamapps/appmanifest_$APPID.acf"
 if [ ! -f "$ACF" ]; then
-  echo "Tải chưa xong hoặc bị lỗi (không thấy file xác nhận). Các file đã tải vẫn ở: $TMP"
-  read -r -p "Nhấn Enter để đóng..." _; exit 1
+  echo "{m_incomplete}"
+  read -r -p "{m_enter}" _; exit 1
 fi
 DIR=$(sed -n 's/^[[:space:]]*"installdir"[[:space:]]*"\(.*\)".*/\1/p' "$ACF" | head -1)
 if [ -z "$DIR" ] || [ -e "$STEAMAPPS/common/$DIR" ]; then
-  echo "Không thể xếp game vào thư viện (thiếu tên thư mục hoặc đã có sẵn): $STEAMAPPS/common/$DIR"
-  echo "Game đã tải vẫn ở: $TMP"
-  read -r -p "Nhấn Enter để đóng..." _; exit 1
+  echo "{m_cannot_file}"
+  echo "{m_kept}"
+  read -r -p "{m_enter}" _; exit 1
 fi
 mkdir -p "$STEAMAPPS/common"
 mv "$ACF" "$STEAMAPPS/appmanifest_$APPID.acf" || exit 1
 rm -rf "$TMP/steamapps"
 mv "$TMP" "$STEAMAPPS/common/$DIR" || exit 1
 echo
-echo "Xong. Quay lại M2WGame, bấm Quét lại trong tab Từ Steam để thêm game."
-read -r -p "Nhấn Enter để đóng..." _
+echo "{m_done}"
+read -r -p "{m_enter}" _
 "#,
         appid = appid,
         bottle_name = bottle.name.replace('"', ""),
         steamcmd = sh_quote(steamcmd),
         steamapps = sh_quote(&steamapps),
         tmp = sh_quote(&tmp),
+        m_no_steamcmd = m_no_steamcmd,
+        m_enter = m_enter,
+        m_no_steam = m_no_steam,
+        m_intro = m_intro,
+        m_tip = m_tip,
+        m_account = m_account,
+        m_incomplete = m_incomplete,
+        m_cannot_file = m_cannot_file,
+        m_kept = m_kept,
+        m_done = m_done,
     )
 }
 
@@ -252,16 +273,13 @@ read -r -p "Nhấn Enter để đóng..." _
 pub fn write_install_script(bottle: &Bottle, appid: &str) -> Result<PathBuf, String> {
     use std::os::unix::fs::PermissionsExt;
     if !appid.chars().all(|c| c.is_ascii_digit()) || appid.is_empty() {
-        return Err("Mã game không hợp lệ.".into());
+        return Err(t!("Mã game không hợp lệ.").into());
     }
     if !steamcmd_path().is_file() {
-        return Err(format!(
-            "Chưa có SteamCMD. Cần file: {}",
-            steamcmd_path().display()
-        ));
+        return Err(t!("Chưa có SteamCMD. Cần file: {}", steamcmd_path().display()));
     }
     if !steamapps_dir(bottle).is_dir() {
-        return Err("Môi trường này chưa cài Steam. Vào mục Môi trường để cài Steam trước.".into());
+        return Err(t!("Môi trường này chưa cài Steam. Vào mục Môi trường để cài Steam trước.").into());
     }
     let dir = paths::downloads_dir();
     std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
@@ -276,24 +294,21 @@ pub fn write_install_script(bottle: &Bottle, appid: &str) -> Result<PathBuf, Str
 pub fn file_into_library(tmp: &Path, steamapps: &Path, appid: &str) -> Result<(String, PathBuf), String> {
     let acf = tmp.join("steamapps").join(format!("appmanifest_{appid}.acf"));
     let text = std::fs::read_to_string(&acf)
-        .map_err(|_| "SteamCMD báo xong nhưng không thấy file xác nhận của game.".to_string())?;
+        .map_err(|_| t!("SteamCMD báo xong nhưng không thấy file xác nhận của game.").to_string())?;
     let kv = parse_acf(&text);
     let dir = kv.get("installdir").cloned().unwrap_or_default();
     if dir.is_empty() || dir == "." || dir == ".." || dir.contains('/') || dir.contains('\\') {
-        return Err("Tên thư mục game trong file xác nhận không hợp lệ.".into());
+        return Err(t!("Tên thư mục game trong file xác nhận không hợp lệ.").into());
     }
     let name = kv.get("name").cloned().unwrap_or_else(|| format!("Game {appid}"));
     let dest = steamapps.join("common").join(&dir);
     if dest.exists() {
-        return Err(format!(
-            "Thư viện Steam đã có thư mục {dir}. Game đã tải vẫn nằm ở {}.",
-            tmp.display()
-        ));
+        return Err(t!("Thư viện Steam đã có thư mục {}. Game đã tải vẫn nằm ở {}.", dir, tmp.display()));
     }
     std::fs::create_dir_all(steamapps.join("common")).map_err(|e| e.to_string())?;
     std::fs::rename(&acf, steamapps.join(format!("appmanifest_{appid}.acf"))).map_err(|e| e.to_string())?;
     let _ = std::fs::remove_dir_all(tmp.join("steamapps"));
-    std::fs::rename(tmp, &dest).map_err(|e| format!("Không chuyển được game vào thư viện: {e}"))?;
+    std::fs::rename(tmp, &dest).map_err(|e| t!("Không chuyển được game vào thư viện: {}", e))?;
     Ok((name, dest))
 }
 
@@ -359,7 +374,9 @@ pub fn game_dir(bottle: &Bottle, app: &SteamApp) -> PathBuf {
 }
 
 /// Said when a game is 32-bit: M2WGame's engines run those badly on Apple Silicon.
-pub const BITS32_WARNING: &str = "Game 32-bit: trên Mac chip Apple, Wine miễn phí thường không chạy được game 32-bit (hay sập ngay lúc mở). Cân nhắc CrossOver hoặc chọn game 64-bit";
+pub fn bits32_warning() -> String {
+    t!("Game 32-bit: trên Mac chip Apple, Wine miễn phí thường không chạy được game 32-bit (hay sập ngay lúc mở). Cân nhắc CrossOver hoặc chọn game 64-bit")
+}
 
 /// Steam's own log (`logs/console_log.txt`) of the bottle.
 pub fn console_log(bottle: &Bottle) -> PathBuf {
@@ -380,12 +397,12 @@ pub fn blocked_reason(log: &str, appid: &str) -> Option<(String, String)> {
     let step = rest.split_whitespace().next().unwrap_or("");
     let why = match step {
         "SynchronizingCloud" => {
-            "đồng bộ dữ liệu đám mây của Steam bị lỗi và Steam đang chờ trả lời trong cửa sổ ẩn. Thường chỉ là lỗi nhất thời. Bấm Dừng rồi Chơi lại".to_string()
+            t!("đồng bộ dữ liệu đám mây của Steam bị lỗi và Steam đang chờ trả lời trong cửa sổ ẩn. Thường chỉ là lỗi nhất thời. Bấm Dừng rồi Chơi lại").to_string()
         }
         "ShowEula" => {
-            "Steam đang chờ bạn đồng ý điều khoản của nhà phát hành game. Chơi lại cũng sẽ hỏi lại; cần mở giao diện Steam để bạn đọc và xác nhận (hãy nhờ trợ lý trong cuộc trò chuyện)".to_string()
+            t!("Steam đang chờ bạn đồng ý điều khoản của nhà phát hành game. Chơi lại cũng sẽ hỏi lại; hãy bấm \"Mở hộp thoại Steam\" để đọc và xác nhận").to_string()
         }
-        other => format!("Steam đang chờ trả lời một câu hỏi ở bước {other} trong cửa sổ ẩn. Thử Dừng rồi Chơi lại, nếu vẫn vậy hãy nhờ trợ lý xem giao diện Steam"),
+        other => t!("Steam đang chờ trả lời một câu hỏi ở bước {} trong cửa sổ ẩn. Thử Dừng rồi Chơi lại; nếu vẫn vậy, bấm \"Mở hộp thoại Steam\" để xem Steam đang hỏi gì", other),
     };
     Some((last.to_string(), why))
 }
@@ -583,6 +600,15 @@ mod tests {
 
         std::env::remove_var("M2WGAME_HOME");
         std::fs::remove_dir_all(&tmp).ok();
+    }
+
+    #[test]
+    fn blocked_launch_and_32_bit_texts_speak_english_when_asked() {
+        let log = "[t] GameAction [AppID 7, ActionID 1] : LaunchApp waiting for user response to SynchronizingCloud \"syncfailed\"\n";
+        let why = crate::i18n::with_lang(crate::i18n::Lang::En, || blocked_reason(log, "7").unwrap().1);
+        assert!(why.contains("cloud sync failed"), "{why}");
+        let warn = crate::i18n::with_lang(crate::i18n::Lang::En, bits32_warning);
+        assert!(warn.starts_with("32-bit game"), "{warn}");
     }
 
     #[test]
