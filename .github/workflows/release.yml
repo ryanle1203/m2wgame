@@ -14,7 +14,7 @@ jobs:
   dmg:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Rust toolchain
         run: rustup toolchain install stable --profile minimal
@@ -38,7 +38,7 @@ jobs:
           hdiutil imageinfo dist/*.dmg | head -5
           ( cd dist && shasum -a 256 -c ./*.sha256 )
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: M2WGame-dmg
           path: dist/*
