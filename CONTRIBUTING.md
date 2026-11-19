@@ -2,6 +2,13 @@
 
 Thanks for helping! Bug reports, compatibility notes, translations, docs and code are all welcome.
 
+## Scope
+
+M2WGame is **Steam-first**: its job is to run Windows games bought on Steam. Support for other
+stores (Epic, GOG, EA, Ubisoft, Battle.net, itch.io...) is not planned for now. If you want to
+work on one, please open an issue to discuss it first, so the design stays small and the
+project's rules below (no DRM circumvention, no stored secrets) keep holding.
+
 ## Ground rules (please read)
 
 These are non-negotiable because they protect users:

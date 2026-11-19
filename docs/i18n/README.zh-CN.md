@@ -6,6 +6,8 @@ M2W = Mac 到 Windows（游戏）。让你在 **Apple 芯片 Mac 上运行 Windo
 
 > **状态：早期 alpha 版。** 部分游戏可以运行，部分不行。请先阅读下面的“限制”。应用界面目前**只有越南语**，欢迎提供翻译。英文 README 为准，译文可能略有滞后。
 
+> **适用范围：** M2WGame 只专注于解决一个问题：运行**在 Steam 上购买的 Windows 游戏**。其他商店和启动器（Epic、GOG、EA、Ubisoft、Battle.net、itch.io 等）暂不支持。你仍可手动添加独立的 `.exe` 文件，但这条路径尚未经过测试。
+
 M2WGame **与** Apple、Valve、CodeWeavers 或 Wine 项目**没有任何关联**。它不包含、不下载、也不绕过任何游戏、DRM 或授权检查：你需要拥有合法的游戏。
 
 ## 功能

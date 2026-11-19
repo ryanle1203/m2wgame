@@ -570,7 +570,7 @@ struct ExeAddView: View {
                     }
                     TextField("Tham số thêm (không bắt buộc)", text: $args)
                 } footer: {
-                    Text("Dùng cách này cho game không qua Steam (bản cài sẵn, GOG, bản tải riêng). Game Steam nên thêm ở tab Từ Steam.")
+                    Text("Dành cho file .exe riêng lẻ. Cách này chưa được kiểm thử kỹ: M2WGame hiện tập trung vào game Windows mua trên Steam, nên hãy thêm game Steam ở tab Từ Steam.")
                 }
             }
             .formStyle(.grouped)
