@@ -1,0 +1,13 @@
+# build output
+target/
+target.nosync/
+.swiftbuild*/
+*.app/
+# local configuration (e.g. iCloud-specific build dir)
+.cargo/
+# macOS / editors
+.DS_Store
+.idea/
+.vscode/
+# logs
+*.log

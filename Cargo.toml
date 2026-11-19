@@ -1,0 +1,25 @@
+[package]
+name = "m2wgame"
+version = "0.1.0"
+edition = "2021"
+description = "Open-source launcher that runs Windows games on Apple Silicon Macs through Wine (core library; the app UI is SwiftUI)"
+readme = "README.md"
+keywords = ["wine", "macos", "apple-silicon", "games", "launcher"]
+categories = ["games"]
+license = "MIT"
+
+# The core (no windows): linked into the SwiftUI app as a static library.
+[lib]
+name = "m2wgame_core"
+path = "src/lib.rs"
+crate-type = ["staticlib", "rlib"]
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = true
