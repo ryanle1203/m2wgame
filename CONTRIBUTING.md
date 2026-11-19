@@ -31,6 +31,13 @@ If your checkout lives in a folder that syncs to the cloud (iCloud, Dropbox), ke
 out of it: create `.cargo/config.toml` with `[build] target-dir = "target.nosync"` (the folder name
 `*.nosync` is ignored by iCloud; `build-swift.sh` expects `target.nosync`).
 
+## Taking screenshots
+
+Run the app against throwaway data so no personal games or paths show up:
+`open -n --env M2WGAME_HOME=/some/demo/folder --env M2WGAME_START_SECTION=engines build/M2WGame.app`.
+`M2WGAME_START_SECTION` is `library | environments | engines | system`; `M2WGAME_OPEN` is
+`add_game | settings | check_net`.
+
 ## Architecture in one minute
 
 - `src/` is the Rust core. Everything is driven by JSON commands (`Core::handle`) and one JSON
