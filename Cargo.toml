@@ -1,6 +1,6 @@
 [package]
 name = "m2wgame"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 description = "Open-source launcher that runs Windows games bought on Steam on Apple Silicon Macs through Wine (core library; the app UI is SwiftUI)"
 readme = "README.md"
