@@ -6,7 +6,7 @@ on:
 
 jobs:
   core-tests:
-    runs-on: macos-14
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
       - name: Rust toolchain
@@ -14,7 +14,7 @@ jobs:
       - name: Core tests
         run: cargo test --lib
   app-build:
-    runs-on: macos-14
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
       - name: Rust toolchain
